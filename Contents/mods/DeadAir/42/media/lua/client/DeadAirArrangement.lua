@@ -118,26 +118,22 @@ end
 function A:arrDrag(x,y)
     local d=self.drag;if not d or (d.kind~="clipMove"and d.kind~="clipEnd")then return false end
     if not d.moved and math.abs(x-d.x)<5 then return true end;d.moved=true
-    local step=self:arrStep();local delta=math.floor((x-d.x)/self.arrW*d.arrTicks/step+.5)*step
-    local c=self.song.parts[self.activePart].clips[d.clip]
+    local step=self:arrStep();local delta=(x-d.x)/self.arrW*d.arrTicks
     local start,length=d.old.start,d.old.length
-    if d.kind=="clipMove"then start=math.max(0,start+delta)else
+    if d.kind=="clipMove"then start=math.max(0,math.floor((start+delta)/step+.5)*step)else
         local minLength=96;for _,n in ipairs(d.notes)do if n.t>=start and n.t<start+length then minLength=math.max(minLength,n.t+n.d-start)end end
-        length=math.max(d.old.loopLength or minLength,length+delta)
+        -- Snap the destination edge, not the drag delta. Round the note-protection
+        -- boundary UP too, so trimming against a note cannot leave a crooked edge.
+        local minimum=start+(d.old.loopLength or minLength)
+        local finish=math.max(math.ceil(minimum/step)*step,math.floor((start+length+delta)/step+.5)*step)
+        length=finish-start
     end
-    for i,other in ipairs(d.clips)do if i~=d.clip and start<other.start+other.length and start+length>other.start then self.message="Clips cannot overlap. Drag into an empty range.";return true end end
-    if start+length>S.MAX_BARS*384 then return true end
-    local candidate=S.copy(d.notes);local candidateClips=S.copy(d.clips);local changed=candidateClips[d.clip]
-    changed.start=start;changed.length=length
-    if d.kind=="clipMove"then for _,n in ipairs(candidate)do if n.t>=d.old.start and n.t<d.old.start+d.old.length then n.t=n.t+start-d.old.start end end
-    elseif d.old.loopLength then
-        -- Discard the old repeats first; rebuilding a shorter loop must not leave tail notes behind.
-        for i=#candidate,1,-1 do local n=candidate[i];if n.t>=d.old.start+d.old.loopLength and n.t<d.old.start+d.old.length then table.remove(candidate,i)end end
-    end
-    local expanded,err=C.expandLoops({clips=candidateClips},candidate,self:loopCapacity())
-    if not expanded then self.message=err;return true end
-    self.song.parts[self.activePart].clips=candidateClips;self.notes=expanded;d.applied=true
+    local edited,err=C.retimeClip({clips=d.clips},d.notes,d.clip,start,length,d.old.loopLength,self:loopCapacity())
+    if not edited then self.message=err;return true end
+    self.song.parts[self.activePart].clips=edited.clips;self.notes=edited.notes;d.applied=true
+    local changed=edited.clips[d.clip]
     self:extendTo(start+length);self.firstTick=start;self.viewTicks=math.max(48,changed.loopLength or length);self.arrCache=nil;self:clampView()
+    self.message="Clip starts at bar "..self:clipBars(start+384).."; length "..self:clipBars(length).." bars."
     return true
 end
 function A:arrFinish(cancel)

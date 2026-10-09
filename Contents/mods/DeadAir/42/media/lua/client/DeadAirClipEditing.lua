@@ -4,6 +4,45 @@ DeadAirClipEditing={}
 local Q,S,C,R,P,A=DeadAirClipEditing,DeadAirScore,DeadAirComposition,DeadAirRoll,DeadAirSongParts,DeadAirArrangement
 local function clamp(n,a,b)return math.max(a,math.min(b,n))end
 function Q:currentClip()local p=self.song.parts[self.activePart];return p and p.clips[self.activeClip or 1]end
+function Q:clipBars(ticks)return (string.format("%.6f",ticks/384):gsub("0+$",""):gsub("%.$",""))end
+function Q:refreshClipTiming(force)
+    if not self.clipStartEntry then return end
+    local c=self:currentClip();local p=self.song.parts[self.activePart]
+    local signature=c and table.concat({p.part,self.activeClip,c.start,c.length,c.loopLength or 0},":")or "none"
+    if force or signature~=self.clipTimingSignature then
+        self.clipTimingSignature=signature
+        self.clipStartEntry:setText(c and self:clipBars(c.start+384)or "")
+        self.clipLengthEntry:setText(c and self:clipBars(c.length)or "")
+        self.clipLoopEntry:setText(c and c.loopLength and self:clipBars(c.loopLength)or "")
+    end
+    local editable=c~=nil and not(self.transport or self.pending or self.saving)
+    self.clipStartEntry:setEditable(editable);self.clipLengthEntry:setEditable(editable)
+    self.clipLoopEntry:setEditable(editable and c.loopLength~=nil or false)
+    self.clipApplyButton:setEnable(editable)
+end
+function Q:toggleClipTiming()
+    self.clipTiming=not self.clipTiming;self:refreshClipTiming(true);self:layout()
+end
+function Q:applyClipTiming()
+    if not self:editable()then return false end
+    local c=self:currentClip();if not c then self.message="Select a clip first.";return false end
+    local start,length,loop=tonumber(self.clipStartEntry:getText()),tonumber(self.clipLengthEntry:getText()),tonumber(self.clipLoopEntry:getText())
+    local function valid(n,minimum,maximum)return n and n==n and n>=minimum and n<=maximum end
+    if not valid(start,1,S.MAX_BARS+1)or not valid(length,0,S.MAX_BARS)or(c.loopLength and not valid(loop,0,S.MAX_BARS))then
+        self.message="Use bar numbers: Start begins at 1; lengths must be positive. 8 = eight bars, 0.25 = one beat.";return false
+    end
+    start=math.floor((start-1)*384+.5);length=math.floor(length*384+.5);loop=c.loopLength and math.floor(loop*384+.5)or nil
+    if not self:settings()then return false end
+    c=self:currentClip();if c.start==start and c.length==length and c.loopLength==loop then self:refreshClipTiming(true);return true end
+    local edited,err=C.retimeClip(self.song.parts[self.activePart],self.notes,self.activeClip,start,length,loop,self:loopCapacity())
+    if not edited then self.message=err;return false end
+    self:checkpoint();self.song.parts[self.activePart].clips=edited.clips;self.notes=edited.notes
+    local chosen=edited.clips[self.activeClip];table.sort(edited.clips,function(a,b)return a.start<b.start end)
+    for i,clip in ipairs(edited.clips)do if clip==chosen then self.activeClip=i;break end end
+    self:extendTo(start+length);self.arrCache=nil;self:rebuildPitches();self:focusClip(self.activeClip);self:refreshClipTiming(true)
+    self.message=loop and "Loop source is exactly "..self:clipBars(loop).." bars. Repeats rebuilt; Ctrl+Z restores the previous timing."or "Clip timing applied. Notes kept; Ctrl+Z restores the previous timing."
+    return true
+end
 function Q:editBounds()
     local c=self:currentClip()
     if c and not self.editWholeTrack then return c.start,c.start+(c.loopLength or c.length)end
@@ -37,7 +76,7 @@ function Q:restoreEdit(snapshot)
     self.editWholeTrack=snapshot.whole;self.firstTick=snapshot.first;self.viewTicks=snapshot.view;self.pitchScroll=snapshot.pitch
     self.editContext=snapshot.context or "notes";self.arrCache=nil;self.otherNoteCount=nil;self.selected={};self.dirty=true
     local clip=self:currentClip();self.phraseEntry:setText(clip and clip.name or "Clip")
-    self:rebuildPitches();self:clampView();self:layout();return true
+    self:rebuildPitches();self:clampView();self:layout();self:refreshClipTiming(true);return true
 end
 function Q:undo(redo)
     if not self:editable()then return end
@@ -73,7 +112,7 @@ function Q:loadPart(index)
     local undo,redo=self.undoStack,self.redoStack
     P.loadPart(self,index);self.undoStack=undo;self.redoStack=redo
     local view=self.partViews[self.score.part];self.activeClip=view and view.clip or 1;self.editWholeTrack=view and view.whole or false
-    self:clampView()
+    self:clampView();self:refreshClipTiming(true)
 end
 function Q:acceptSaved(song)
     local ids={};for i,p in ipairs(song.parts)do local old=self.song.parts[i];if old then ids[old.part]=p.part end end
@@ -103,7 +142,7 @@ end
 function Q:focusClip(index)
     self.editWholeTrack=false;A.focusClip(self,index)
     local c=self:currentClip();if c then self.firstTick=c.start;self.viewTicks=math.max(48,c.loopLength or c.length);self:clampView()end
-    self.editContext="clip"
+    self.editContext="clip";self:refreshClipTiming(true)
 end
 function Q:toggleEditScope()
     self.editWholeTrack=not self.editWholeTrack;self.selected={};self:fitNotes(self.editWholeTrack)
@@ -143,7 +182,8 @@ function Q:toggleLoop()
     local c=self:currentClip();if not c then return end
     if c.loopLength then self:unrollClip();return end
     self:checkpoint();c.loopLength=c.length;self.editWholeTrack=false;self.arrCache=nil
-    self.message="Loop on. Drag this clip's right edge to repeat it; edit one cycle below."
+    self:refreshClipTiming(true)
+    self.message="Loop on. Drag the right edge to repeat; Timing sets the exact source length in bars."
 end
 function Q:unrollClip()
     if not self:editable()or not self:settings()then return end

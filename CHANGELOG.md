@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.13.3
+
+- Clip moves and edge drags snap the destination to the grid. An off-grid clip no
+  longer keeps its old offset through every drag. Trimming against a note tail
+  rounds the protected edge up to the grid without changing the played notes.
+- Added Timing controls for exact start bar, total clip length and loop source
+  length. Fractional bars are supported; one quarter of a bar is one beat.
+- Changing a loop's period rebuilds repeats from the original source. Old generated
+  repeats cannot leak into a longer source. Edits reject overlaps, lost source notes
+  and note-capacity overflow before applying, and participate in undo/redo.
+- Loop length labels show the stored value instead of rounding to two significant
+  digits. Existing songs keep their timing until edited.
+- Lua-only update; the distributed 0.13.2 Java engine and audio assets are unchanged.
+
+Validation: full Lua/editor/simulated-network suite, exact six-cycle repair,
+fractional/triplet periods, save/reopen/playback, and installed-game widget callbacks
+with Java UI stand-ins. In-game visual and listening checks remain pending.
+
 ## 0.13.2
 
 - Fixed SF2 modulator curve decoding that made quiet piano notes barely audible and

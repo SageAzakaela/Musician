@@ -19,6 +19,8 @@ and now there's a music workstation in it.
   and preview individual parts or the whole song privately.
 - Import MIDI clips, drag chords onto a root note, move and loop phrases, and use the
   included procedural chords, progressions and drum patterns.
+- Set exact clip and loop lengths through **Timing**. Arrangement moves and edge
+  drags snap their destination to the grid, including clips that started off-grid.
 - Copy written music, share parts, and coordinate an ensemble start. Nearby players
   can also hear live MIDI performances. Multiplayer remains experimental.
 - Load personal SF2 soundfonts or soundfont-pack mods and map presets to instruments.
@@ -26,7 +28,7 @@ and now there's a music workstation in it.
   stay unchanged. Fast audio limits queued audio; actual latency still depends on
   Windows, the device driver and the rest of the audio path.
 
-Current source snapshot: **0.13.2**, targeting **Project Zomboid Build 42.21**.
+Current source snapshot: **0.13.3**, targeting **Project Zomboid Build 42.21**.
 The supported audio-client setup is Windows x64. Other operating systems have not
 been verified. The internal mod ID and Java package remain `DeadAir` for save and
 settings compatibility.
@@ -44,6 +46,13 @@ paper to write a song.
 
 **F10** shows the performance panel, **F11** stops notes, and **F12** toggles playing
 animations. In-world music can attract zombies; the setting is optional.
+
+To fix an existing short loop, select its clip, open **Timing**, set **Loop length
+(bars)** to the intended cycle (for example `8`), and click **Apply timing**. **Clip
+length** is the full arrangement span: `48` repeats an eight-bar source six times.
+Fractions work too: `0.25` is one beat. Source notes keep their timing and velocity;
+an edit that would cut them or overlap another clip is rejected. Undo restores the
+previous timing. Existing songs are not automatically rounded on load.
 
 ## Building from source
 

@@ -83,6 +83,32 @@ function C.expandLoops(part,notes,capacity)
     while out[outside]do result[#result+1]=out[outside];outside=outside+1 end
     return result
 end
+-- Retiming takes the editable source from the OLD range. In particular, growing
+-- a loop must not turn a generated repeat into new source notes.
+function C.retimeClip(part,notes,index,start,length,loopLength,capacity)
+    local old=part.clips and part.clips[index]
+    if not old then return nil,"Select a clip first."end
+    if not S.integer(start,0,S.MAX_BARS*384-1)or not S.integer(length,1,S.MAX_BARS*384-start)then return nil,"Clip timing is outside the song's timeline capacity."end
+    if loopLength~=nil and not S.integer(loopLength,1,length)then return nil,"Loop length must fit inside the clip length."end
+    for i,c in ipairs(part.clips)do if i~=index and start<c.start+c.length and start+length>c.start then
+        return nil,"Clips cannot overlap. Leave room before the next clip."
+    end end
+    local sourceEnd=old.start+(old.loopLength or old.length);local sourceLength=loopLength or length
+    local retained={}
+    for _,n in ipairs(notes)do
+        if n.t>=old.start and n.t<old.start+old.length then
+            if n.t<sourceEnd then
+                if n.t+n.d-old.start>sourceLength then return nil,"Source notes extend past that end. Shorten or move those notes first."end
+                local copy=S.copy(n);copy.t=start+n.t-old.start;retained[#retained+1]=copy
+            end
+        else retained[#retained+1]=n end
+    end
+    local clips=S.copy(part.clips);local changed=clips[index]
+    changed.start=start;changed.length=length;changed.loopLength=loopLength
+    local expanded,err=C.expandLoops({clips=clips},retained,capacity)
+    if not expanded then return nil,err end
+    return {clips=clips,notes=expanded}
+end
 -- Notes use absolute song time. Clip ranges move the same notes without copying audio.
 -- Drawing outside a clip extends the arrangement; overlapping ranges merge without losing notes.
 function C.cover(part,notes)

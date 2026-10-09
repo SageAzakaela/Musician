@@ -99,12 +99,23 @@ function V:buildControls()
     self.loopButton=button(self,"Loop: OFF",function(p)p:toggleLoop()end,"Loop the selected clip. Drag its arrangement right edge to repeat the source cycle. Editing the source updates every repeat.")
     self.unrollButton=button(self,"Unroll",function(p)p:unrollClip()end,"Turn this clip's loop repetitions into independently editable notes, keeping the sound. Undo restores the loop.")
     self.scopeButton=button(self,"Clip notes",function(p)p:toggleEditScope()end,"Clip notes edits only the selected clip or its loop source. Track notes shows the whole track. Generated repeats remain protected until Unroll.")
+    self.clipTimingButton=button(self,"Timing",function(p)p:toggleClipTiming()end,"Set the exact clip start, clip length and loop source length in bars. Use 8 for an eight-bar loop; 0.25 is one beat.")
+    self.clipTimingFields={}
+    local function timing(label,tip)
+        local width=math.max(130,measure(label)+20);local control=entry(self,"",16,width)
+        control:setTooltip(tip);self.clipTimingFields[#self.clipTimingFields+1]={label=label,control=control,width=width};return control
+    end
+    self.clipStartEntry=timing("Start bar","Song position: 1 is the beginning, 2 is bar two, 1.25 is bar one beat two.")
+    self.clipLengthEntry=timing("Clip length (bars)","Total arrangement length, including repeats. Fractions are allowed: 0.25 is one beat.")
+    self.clipLoopEntry=timing("Loop length (bars)","Length of one repeating cycle. Enable Loop first. Changing this rebuilds repeats from the original source notes, keeping their timing.")
+    self.clipApplyButton=button(self,"Apply timing",function(p)p:applyClipTiming()end,"Apply all timing fields together. Notes are kept; overlapping clips and edits that cut source notes are rejected. Ctrl+Z undoes the change.")
+    self.clipTimingFields[#self.clipTimingFields+1]={label="",control=self.clipApplyButton,width=self.clipApplyButton.rollWidth}
     self.loopButton.rollWidth=measure("Loop: OFF")+24;self.scopeButton.rollWidth=measure("Track notes")+24
     self.focusButton=top("Focus notes",function(p)p.notesOnly=not p.notesOnly;p:layout()end,"Hide or show the arrangement to give the piano roll more space.")
     self.soloButton=button(self,"Solo part",function(p)p:toggleTrack(p.activePart,"solo")end,"Hear only this part. Play normally previews all unmuted tracks.")
     self.phraseEntry=entry(self,"Clip 1",48,150)
     self.renameButton=button(self,"Name",function(p)p:renamePhrase()end,"Apply this name to the selected clip.")
-    self.partControls={self.instrument,self.monitorButton,self.loopButton,self.unrollButton,self.scopeButton,self.phraseEntry,self.renameButton}
+    self.partControls={self.instrument,self.monitorButton,self.loopButton,self.unrollButton,self.scopeButton,self.clipTimingButton,self.phraseEntry,self.renameButton}
     self.partPicker:setVisible(false);self.partButton:setVisible(false);self.barsEntry:setVisible(false)
     -- Tempo is part of the transport; song and track names live in Details.
     for i=#self.detailFields,1,-1 do if self.detailFields[i].control==self.bpmEntry then table.remove(self.detailFields,i)end end
@@ -117,6 +128,7 @@ function V:buildControls()
     self.recordButton.backgroundColor={r=.30,g=.15,b=.12,a=1}
     self.rowH=math.max(14,self.fontH+2)
     self:rebuildPitches();self:layout()
+    self:refreshClipTiming(true)
     local clip=self.song.parts[self.activePart].clips[1];if clip then self.phraseEntry:setText(clip.name)end
     if #self.notes>0 then self:fitNotes(false)end
     self:setWantKeyEvents(true);self:setWantMouseEvents(true)
@@ -154,7 +166,16 @@ function V:layout(compact)
     self.arrH=self.arrHidden and 0 or self.arrRulerH+self.trackRows*self.trackH
     self.trackScroll=math.min(self.trackScroll or 0,math.max(0,#self.song.parts-self.trackRows))
     y=y+self.arrH+6;self.partLabelY=y;y=y+self.fontH+6
-    if self.libraryOpen then self.phraseEntry:setVisible(false);self.renameButton:setVisible(false);if self.arrHidden then flow({self.partPicker,self.instrument,self.loopButton,self.unrollButton,self.scopeButton})else flow({self.instrument,self.loopButton,self.unrollButton,self.scopeButton})end else flow(self.partControls)end
+    if self.libraryOpen then self.phraseEntry:setVisible(false);self.renameButton:setVisible(false);if self.arrHidden then flow({self.partPicker,self.instrument,self.loopButton,self.unrollButton,self.scopeButton,self.clipTimingButton})else flow({self.instrument,self.loopButton,self.unrollButton,self.scopeButton,self.clipTimingButton})end else flow(self.partControls)end
+    local timingX=12;local timingH=h+self.fontH+4
+    for _,f in ipairs(self.clipTimingFields)do
+        f.control:setVisible(self.clipTiming==true)
+        if self.clipTiming then
+            if timingX+f.width>self.bodyW-12 and timingX>12 then timingX=12;y=y+timingH+gap end
+            f.x=timingX;f.y=y;place(f.control,timingX,y+self.fontH+3,f.width,h);timingX=timingX+f.width+gap
+        end
+    end
+    if self.clipTiming then y=y+timingH+gap end
     flow(self.tools)
     for _,c in ipairs(self.advancedTools)do c:setVisible(self.details)end
     if self.details then flow(self.advancedTools)end
@@ -193,6 +214,7 @@ function V:prerender()
     if self.width~=self.layoutW or self.height~=self.layoutH then self:layout()end
     self:drawArrangement()
     local focused=self:currentClip()
+    self:refreshClipTiming()
     self.loopButton:setTitle(focused and focused.loopLength and "Loop: ON"or "Loop: OFF")
     self.unrollButton:setEnable(focused~=nil and focused.loopLength~=nil)
     self.scopeButton:setTitle(self.editWholeTrack and "Track notes"or "Clip notes")
@@ -204,7 +226,7 @@ function V:prerender()
     local position=tostring(math.floor(tick/384)+1).."."..tostring(math.floor(tick%384/96)+1)
     if not self.arrHidden then self:drawText("ARRANGEMENT  "..position,14,self.arrHeaderY+6,.73,.76,.61,1,UIFont.Small)end
     local clip=self:currentClip()
-    self:drawText(short(self.partEntry:getText().." / "..(clip and (clip.name..(clip.loopLength and " / source "..string.format("%.2g",clip.loopLength/384).." bars"or ""))or "Piano roll").."   -   "..(self.transport=="record"and "RECORDING"or "Private preview"),self.bodyW-28),14,self.partLabelY,.78,.80,.67,1,UIFont.Small)
+    self:drawText(short(self.partEntry:getText().." / "..(clip and (clip.name..(clip.loopLength and " / source "..self:clipBars(clip.loopLength).." bars"or ""))or "Piano roll").."   -   "..(self.transport=="record"and "RECORDING"or "Private preview"),self.bodyW-28),14,self.partLabelY,.78,.80,.67,1,UIFont.Small)
     self.playButton:setTitle(self.transport=="preview" and "Stop" or "Play")
     self.metroButton:setTitle(self.metronome and "Click: ON" or "Click: OFF")
     self.modeButton:setTitle(self.mode=="draw" and "Draw [B]" or "Select [B]")
@@ -212,12 +234,13 @@ function V:prerender()
     self.maxButton:setTitle(self.maximized and "Restore" or "Expand")
     self.scaleViewButton:setTitle(self.scaleOnly and "Only scale" or "All pitches")
     self.monitorButton:setTitle(self.monitor and "MIDI: ON" or "MIDI: OFF")
-    for _,v in ipairs({{self.modeButton,self.mode=="draw"},{self.foldButton,self.fold},{self.scaleButton,self.scaleEnabled},{self.velButton,self.showVelocity},{self.auditionButton,self.hear},{self.followButton,self.follow},{self.detailsButton,self.details}})do
+    for _,v in ipairs({{self.modeButton,self.mode=="draw"},{self.foldButton,self.fold},{self.scaleButton,self.scaleEnabled},{self.velButton,self.showVelocity},{self.auditionButton,self.hear},{self.followButton,self.follow},{self.detailsButton,self.details},{self.clipTimingButton,self.clipTiming}})do
         v[1].backgroundColor=v[2] and {r=.31,g=.34,b=.24,a=1}or{r=.12,g=.13,b=.11,a=1}
     end
     local subtitle="MUSICIAN / SONGBOOK   /   "..self.titleEntry:getText().."  -  "..self.partEntry:getText()..(self.dirty and " *" or "")
     self:drawText(short(subtitle,self.maxButton.x-28),14,10,.82,.84,.70,1,UIFont.Small)
     if self.details then for _,f in ipairs(self.detailFields)do self:drawText(f.label,f.x,f.y,.65,.72,.75,1,UIFont.Small)end end
+    if self.clipTiming then for _,f in ipairs(self.clipTimingFields)do self:drawText(f.label,f.x,f.y,.73,.76,.61,1,UIFont.Small)end end
     local x,y,w,h=self.gridX,self.gridY,self.gridW,self.gridH
     self:drawRect(x,self.rulerY,w,y-self.rulerY,1,.11,.15,.17)
     self:drawRect(10,y,x-12,h,1,.1,.13,.15)

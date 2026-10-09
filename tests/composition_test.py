@@ -208,6 +208,7 @@ lua.execute((root/'tests/song_parts_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/studio_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/library_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/clip_editing_test.lua').read_text(encoding='utf-8'))
+lua.execute((root/'tests/clip_timing_test.lua').read_text(encoding='utf-8'))
 
 lua.execute('client=false;server=false;DeadAir.cleanup();player.inventory=inventory({item});player.moving=false')
 lua.execute((root/'tests/world_test.lua').read_text(encoding='utf-8'))
