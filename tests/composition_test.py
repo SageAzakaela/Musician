@@ -86,7 +86,7 @@ mod=root/'Contents/mods/DeadAir/42/media/lua'
 for path in mod.rglob('*.lua'):
     lua.execute('assert(loadstring(...))',path.read_text(encoding='utf-8'))
 for name in ['DeadAirScore','DeadAirComposition','DeadAirClipOps','DeadAirPaper','DeadAirKit']:lua.execute((mod/'shared'/f'{name}.lua').read_text(encoding='utf-8'))
-for name in ['MusicianSoundfonts','DeadAirInstruments','DeadAirMotion','DeadAirDrumMotion','DeadAirPerformanceAction','DeadAirWorld','DeadAir','DeadAirRoll','DeadAirRollView','DeadAirSongParts','DeadAirArrangement','DeadAirPatterns','DeadAirLibrary','DeadAirClipEditing','DeadAirWorkflow','DeadAirWorkspace','DeadAirSongEditor','DeadAirSongs']:
+for name in ['MusicianSoundfonts','DeadAirInstruments','DeadAirMotion','DeadAirDrumMotion','DeadAirPerformanceAction','DeadAirWorld','DeadAir','DeadAirRoll','DeadAirRollView','DeadAirSongParts','DeadAirArrangement','DeadAirPatterns','DeadAirLibrary','DeadAirClipEditing','DeadAirWorkflow','DeadAirWorkspace','DeadAirAppearance','DeadAirSongEditor','DeadAirSongs']:
     lua.execute((mod/'client'/f'{name}.lua').read_text(encoding='utf-8'))
 lua.execute('''
 local D,S,C=DeadAir,DeadAirScore,DeadAir.Songs
@@ -212,6 +212,7 @@ lua.execute((root/'tests/library_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/clip_editing_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/clip_timing_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/workflow_test.lua').read_text(encoding='utf-8'))
+lua.execute((root/'tests/customization_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/recording_regression_test.lua').read_text(encoding='utf-8'))
 
 lua.execute('client=false;server=false;DeadAir.cleanup();player.inventory=inventory({item});player.moving=false')

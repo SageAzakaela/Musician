@@ -66,6 +66,31 @@ e.deleteTrackButton.onclick(e.deleteTrackButton.target,e.deleteTrackButton);asse
 print('PASS: real installed PZ Lua panel/button/combo/text-entry constructors, tooltips, scale and part callbacks, Add part button, layout, rendering calls, text focus, drawing and key dispatch (Java UI stand-ins)')
 ''')
 lua.execute('''
+for _,size in ipairs({{1024,768,18},{1280,720,22},{1920,1080,22}})do
+ screenWidth,screenHeight,fontHeight=size[1],size[2],size[3]
+ local e=DeadAirSongEditor:new(paper(),DeadAirScore.new());e:initialise();e:setVisible(true)
+ e.viewButton.onclick(e.viewButton.target,e.viewButton);assert(e.viewSettings)
+ for i=1,4 do
+  e.themeChoice.selected=i;e.themeChoice.onChange(e.themeChoice.target,e.themeChoice)
+  e.accentEntry:setText('#B09BDD');e.accentApply.onclick(e.accentApply.target,e.accentApply)
+  assert(e.themeIndex==i and e.accentColor==0xB09BDD and e.accentEntry:getText()=='#B09BDD')
+  e:prerender();e:render()
+ end
+ e.densityChoice.selected=2;e.densityChoice.onChange(e.densityChoice.target,e.densityChoice)
+ e.presetChoice.selected=2;e.presetChoice.onChange(e.presetChoice.target,e.presetChoice);e:prerender()
+ assert(e.arrHidden and e.showVelocity and e.partPicker:isVisible())
+ e.inspectorScroll=99999;e:layout();e:prerender()
+ e.resetViewButton.onclick(e.resetViewButton.target,e.resetViewButton);assert(not e.accentColor and not e.notesOnly)
+ e.editInspectorButton.onclick(e.editInspectorButton.target,e.editInspectorButton)
+ for _,context in ipairs({'notes','clip','track'})do e.editContext=context;e:prerender()end
+ e.moreButton.onclick(e.moreButton.target,e.moreButton)
+ for _,o in ipairs(e.noteActionsMenu.options)do if o.title=='Fit clip'then o.fn(o.target)end end
+ e:close()
+end
+screenWidth,screenHeight,fontHeight=1280,720,14
+print('PASS: View, presets, theme/custom-color fields, More and inspector callbacks through installed Lua widgets; strict numeric drawing-argument checks at three screen/font sizes')
+''')
+lua.execute('''
 local F=MusicianSoundfonts
 local s={loaded=true,revision=1,added='',inspected='bundled',message='Ready',banks={{id='bundled',name='Included'},{id='pack:Test:main',name='Example pack'}},mappings={},presets={{key='0:0:0',name='Piano',bank=0,program=0,drums=false},{key='896:12:0',name='Soft lead',bank=7,program=12,drums=false}}}
 for i=1,16 do s.mappings[i]={name='Instrument '..i,bank='',preset=''}end

@@ -224,9 +224,9 @@ function V:prerender()
     self.soloButton.backgroundColor=self.song.parts[self.activePart].solo and {r=.4,g=.43,b=.27,a=1}or {r=.12,g=.13,b=.11,a=1}
     local tick=self.transport and self:transportTick()or (self.playFrom or 0)
     local position=tostring(math.floor(tick/384)+1).."."..tostring(math.floor(tick%384/96)+1)
-    if not self.arrHidden then self:drawText("ARRANGEMENT  "..position,14,self.arrHeaderY+6,.73,.76,.61,1,UIFont.Small)end
+    if not self.workflowReady and not self.arrHidden then self:drawText("ARRANGEMENT  "..position,14,self.arrHeaderY+6,.73,.76,.61,1,UIFont.Small)end
     local clip=self:currentClip()
-    self:drawText(short(self.partEntry:getText().." / "..(clip and (clip.name..(clip.loopLength and " / source "..self:clipBars(clip.loopLength).." bars"or ""))or "Piano roll").."   -   "..(self.transport=="record"and "RECORDING"or "Private preview"),self.bodyW-28),14,self.partLabelY,.78,.80,.67,1,UIFont.Small)
+    if not self.workflowReady then self:drawText(short(self.partEntry:getText().." / "..(clip and clip.name or "Piano roll"),self.bodyW-28),14,self.partLabelY,.78,.80,.67,1,UIFont.Small)end
     self.playButton:setTitle(self.transport=="preview" and "Stop" or "Play")
     self.metroButton:setTitle(self.metronome and "Click: ON" or "Click: OFF")
     self.modeButton:setTitle(self.mode=="draw" and "Draw [B]" or "Select [B]")
@@ -237,23 +237,23 @@ function V:prerender()
     for _,v in ipairs({{self.modeButton,self.mode=="draw"},{self.foldButton,self.fold},{self.scaleButton,self.scaleEnabled},{self.velButton,self.showVelocity},{self.auditionButton,self.hear},{self.followButton,self.follow},{self.detailsButton,self.details},{self.clipTimingButton,self.clipTiming}})do
         v[1].backgroundColor=v[2] and {r=.31,g=.34,b=.24,a=1}or{r=.12,g=.13,b=.11,a=1}
     end
-    local subtitle="MUSICIAN / SONGBOOK   /   "..self.titleEntry:getText().."  -  "..self.partEntry:getText()..(self.dirty and " *" or "")
+    local subtitle="MUSICIAN / SONGBOOK   /   "..self.titleEntry:getText()..(self.dirty and " *" or "")
     self:drawText(short(subtitle,self.maxButton.x-28),14,10,.82,.84,.70,1,UIFont.Small)
     -- The workspace owns sidebar labels. Its button rows have no legacy x/y;
     -- drawing them here would pass nil coordinates into the Java UI bridge.
     if self.details and not self.workflowReady then for _,f in ipairs(self.detailFields)do self:drawText(f.label,f.x,f.y,.65,.72,.75,1,UIFont.Small)end end
     if self.clipTiming then for _,f in ipairs(self.clipTimingFields)do self:drawText(f.label,f.x,f.y,.73,.76,.61,1,UIFont.Small)end end
     local x,y,w,h=self.gridX,self.gridY,self.gridW,self.gridH
-    self:drawRect(x,self.rulerY,w,y-self.rulerY,1,.11,.15,.17)
-    self:drawRect(10,y,x-12,h,1,.1,.13,.15)
+    self:themeRect("ruler",x,self.rulerY,w,y-self.rulerY)
+    self:themeRect("panel",10,y,x-12,h)
     self:setStencilRect(10,y,self.width-20,h)
     for row=math.floor(self.pitchScroll),math.min(#self.pitches-1,math.ceil(self.pitchScroll+self.rows))do
         local n=self.pitches[row+1];local py=y+(row-self.pitchScroll)*self.rowH
         local black=({[1]=true,[3]=true,[6]=true,[8]=true,[10]=true})[n%12]
-        self:drawRect(x,py,w,self.rowH,1,black and .09 or .12,black and .10 or .13,black and .08 or .11)
-        if self.scaleEnabled and self:inScale(n)then self:drawRect(x,py,w,self.rowH,.12,.3,.72,.55)end
-        self:drawRect(10,py,x-14,self.rowH-1,1,black and .16 or .68,black and .20 or .73,black and .23 or .74)
-        if n%12==(self.scaleEnabled and self.rootNote.selected-1 or 0) then self:drawRect(x,py,w,1,.6,.4,.75,.57)end
+        self:themeRect(black and "gridDark"or "gridLight",x,py,w,self.rowH)
+        if self.scaleEnabled and self:inScale(n)then self:themeRect("accent",x,py,w,self.rowH,.10)end
+        self:themeRect(black and "keyBlack"or "keyWhite",10,py,x-14,self.rowH-1)
+        if n%12==(self.scaleEnabled and self.rootNote.selected-1 or 0) then self:themeRect("accent",x,py,w,1,.45)end
         if self.rowH>=self.fontH or n%12==(self.scaleEnabled and self.rootNote.selected-1 or 0) or self.fold then self:drawText(self:pitchName(n),14,py+(self.rowH-self.fontH)/2,black and .82 or .08,black and .88 or .13,black and .88 or .15,1,UIFont.Small)end
     end
     self:clearStencilRect()
@@ -262,30 +262,30 @@ function V:prerender()
     self:setStencilRect(x,y,w,h)
     for t=math.ceil(self.firstTick/lineStep)*lineStep,self.firstTick+self.viewTicks,lineStep do
         local px=x+(t-self.firstTick)/self.viewTicks*w
-        self:drawRect(px,y,t%384==0 and 2 or 1,h,t%384==0 and .6 or t%96==0 and .3 or .12,.5,.65,.63)
+        self:themeRect("line",px,y,t%384==0 and 2 or 1,h,t%384==0 and .6 or t%96==0 and .3 or .12)
     end
     if not self.drag and self.mode=="draw" and self.hoverX and not self.transport then
         local t,pitch=self:point(self.hoverX,self.hoverY)
         if t and not self:hit(self.hoverX,self.hoverY) then local nx,ny,nw,nh=self:noteRect({t=t,n=pitch,d=self:noteLength()})
-            if nx then self:drawRect(nx,ny+1,nw-1,nh-2,.16,.55,1,.8)end
+            if nx then self:themeRect("accent",nx,ny+1,nw-1,nh-2,.16)end
         end
     end
     for _,n in ipairs(self.notes)do
         local nx,ny,nw,nh=self:noteRect(n)
         if nx and ny+nh>y and ny<y+h and nx+nw>x and nx<x+w then
             local sel=self.selected[n];local ww=math.max(3,nw-1)
-            self:drawRect(nx,ny+1,ww,nh-2,1,sel and .77 or .48,sel and .80 or (.48+n.v/127*.17),sel and .56 or .35)
-            if sel then self:drawRectBorder(nx,ny+1,ww,nh-2,.9,.78,1,.91)end
-            local grip=math.min(4,ww*.16);self:drawRect(nx+ww-grip,ny+3,grip,math.max(1,nh-6),.65,.83,1,.9)
-            if nw>18 then self:drawRect(nx,ny+3,math.min(2,ww*.1),math.max(1,nh-6),.5,.83,1,.9)end
+            self:themeRect(sel and "selected"or "accent",nx,ny+1,ww,nh-2)
+            if sel then self:themeBorder("text",nx,ny+1,ww,nh-2,.9)end
+            local grip=math.min(4,ww*.16);self:themeRect("text",nx+ww-grip,ny+3,grip,math.max(1,nh-6),.65)
+            if nw>18 then self:themeRect("text",nx,ny+3,math.min(2,ww*.1),math.max(1,nh-6),.5)end
             if nw>measure(self:pitchName(n.n))+12 and nh>=self.fontH+2 then
-                self:drawText(self:pitchName(n.n),nx+5,ny+(nh-self.fontH)/2,.035,.13,.13,1,UIFont.Small)
+                self:themeText(sel and "onSelected"or "onAccent",self:pitchName(n.n),nx+5,ny+(nh-self.fontH)/2)
             end
         end
     end
     if self.drag and self.drag.kind=="marquee"then
         local d=self.drag;local mx,my=math.min(d.x,d.toX),math.min(d.y,d.toY);local mw,mh=math.abs(d.toX-d.x),math.abs(d.toY-d.y)
-        self:drawRect(mx,my,mw,mh,.12,.5,.9,1);self:drawRectBorder(mx,my,mw,mh,.85,.55,.9,1)
+        self:themeRect("accent",mx,my,mw,mh,.12);self:themeBorder("selected",mx,my,mw,mh,.85)
     end
     if self.transport and self.transport~="library"and DeadAir.api()then
         local tick=self:transportTick()
@@ -302,19 +302,21 @@ function V:prerender()
     self:drawText("Pitch",12,self.rulerY+3,.65,.75,.76,1,UIFont.Small)
     if self.showVelocity then
         self:drawText("Vel.",10,self.velocityY,.65,.75,.76,1,UIFont.Small)
-        self:drawRect(x,self.velocityY,w,self.velocityH,1,.10,.11,.085)
+        self:themeRect("panel",x,self.velocityY,w,self.velocityH)
         self:setStencilRect(x,self.velocityY,w,self.velocityH)
         for _,n in ipairs(self.notes)do if self:noteEditable(n)then
             local nx=x+(n.t-self.firstTick)/self.viewTicks*w;local nh=n.v/127*(self.velocityH-5);local ny=self.velocityY+self.velocityH-nh
-            self:drawRect(nx,ny,2,nh,.8,.62,.69,.42)
-            self:drawRect(nx-3,ny-2,7,5,1,self.selected[n] and .85 or .60,.78,.53)
+            self:themeRect("accent",nx,ny,2,nh,.8)
+            self:themeRect(self.selected[n]and "selected"or "accent",nx-3,ny-2,7,5)
         end end;self:clearStencilRect()
     end
-    self:drawText("Song",12,self.overviewY+4,.6,.72,.72,1,UIFont.Small)
-    self:drawRect(x,self.overviewY,w,self.overviewH,1,.11,.15,.17)
-    for _,n in ipairs(self.notes)do self:drawRect(x+n.t/self:ticks()*w,self.overviewY+2+(127-n.n)/127*(self.overviewH-5),math.max(2,n.d/self:ticks()*w),2,.7,.35,.85,.68)end
+    if self.overviewH>0 then
+    self:themeText("muted","Song",12,self.overviewY+2)
+    self:themeRect("ruler",x,self.overviewY,w,self.overviewH)
+    for _,n in ipairs(self.notes)do self:themeRect("accent",x+n.t/self:ticks()*w,self.overviewY+2+(127-n.n)/127*(self.overviewH-5),math.max(2,n.d/self:ticks()*w),2,.7)end
     local ox,ow=x+self.firstTick/self:ticks()*w,self.viewTicks/self:ticks()*w
-    self:drawRect(ox,self.overviewY,ow,self.overviewH,.10,.7,1,.88);self:drawRectBorder(ox,self.overviewY,ow,self.overviewH,.85,.6,.9,.8)
+    self:themeRect("accent",ox,self.overviewY,ow,self.overviewH,.10);self:themeBorder("accent",ox,self.overviewY,ow,self.overviewH,.85)
+    end
     local info=self.editContext=="track"and "TRACK"or self.editContext=="clip"and "CLIP"or(self.mode=="draw"and "DRAW"or "SELECT")
     info=info.."   "..#self.notes.." notes   "..self:selectedCount().." selected   Bars "..(math.floor(self.firstTick/384)+1).."-"..math.ceil((self.firstTick+self.viewTicks)/384).." / "..self.score.bars
     info=info.."   "..S.names[self.instrument.selected].." / "..self.bpmEntry:getText().." BPM"
@@ -329,7 +331,7 @@ function V:prerender()
     local hint=self.mode=="draw" and "Drag: draw / move  |  Right-drag: erase  |  B: box select  |  Drag note edges: length" or "Drag a box: select  |  Ctrl-drag: copy  |  Alt-drag: velocity  |  Delete: remove  |  Ctrl+D: duplicate"
     if self.editContext=="track"then hint="Track selected  |  Delete: remove track  |  Ctrl+Z: restore  |  Click piano roll to edit notes"
     elseif self.editContext=="clip"then hint="Clip selected  |  Delete: remove clip  |  Ctrl+D: duplicate clip  |  Click piano roll to edit notes"end
-    self:drawText(short(hint.."  |  Ctrl+wheel: zoom  |  Help: shortcuts",self.bodyW-28),12,fy+2*self.fontH+4,.58,.68,.72,1,UIFont.Small)
+    if self.showHints~=false then self:themeText("muted",short(hint.."  |  Ctrl+wheel: zoom  |  Help: shortcuts",self.bodyW-28),12,fy+2*self.fontH+4)end
     self:drawLibraryDrop()
     self:drawRect(self.width-11,self.height-6,7,2,1,.55,.8,.72);self:drawRect(self.width-6,self.height-11,2,7,1,.55,.8,.72)
 end

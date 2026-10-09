@@ -160,33 +160,33 @@ function A:drawArrangement()
     self.trackHits={}
     if (self.notesOnly or self.arrHidden) then return end
     local x,w,y=self.trackW,self.arrW,self.arrY
-    self:drawRect(12,y,(self.bodyW or self.width)-24,self.arrH,1,.105,.11,.095)
-    self:drawRect(x,y,w,self.arrRulerH,1,.16,.17,.145)
+    self:themeRect("panel",12,y,(self.bodyW or self.width)-24,self.arrH)
+    self:themeRect("ruler",x,y,w,self.arrRulerH)
     local range=#self.song.parts>self.trackRows and (tostring((self.trackScroll or 0)+1).."-"..math.min(#self.song.parts,(self.trackScroll or 0)+self.trackRows).." / "..#self.song.parts)or ""
     local rangeW=getTextManager():MeasureStringX(UIFont.Small,range)
-    self:drawText(short("PART / INSTRUMENT",x-rangeW-40),20,y+4,.68,.69,.62,1,UIFont.Small)
+    self:themeText("muted",short("PART / INSTRUMENT",x-rangeW-40),20,y+4)
     local step=384;while step/self.arrTicks*w<52 do step=step*2 end
     self:setStencilRect(x,y,w,self.arrH)
     for tick=math.ceil(self.arrFirst/step)*step,self.arrFirst+self.arrTicks,step do
         local px=x+(tick-self.arrFirst)/self.arrTicks*w
-        self:drawRect(px,y+self.arrRulerH,1,self.arrH-self.arrRulerH,.24,.55,.57,.46)
-        self:drawText(tostring(math.floor(tick/384)+1),px+5,y+4,.78,.79,.70,1,UIFont.Small)
+        self:themeRect("line",px,y+self.arrRulerH,1,self.arrH-self.arrRulerH,.24)
+        self:themeText("text",tostring(math.floor(tick/384)+1),px+5,y+4)
     end
     self:clearStencilRect()
     for row=1,self.trackRows do
         local i=row+(self.trackScroll or 0);local p=self.song.parts[i];local py=y+self.arrRulerH+(row-1)*self.trackH
         if p then
             local selected=i==self.activePart
-            self:drawRect(12,py,(self.bodyW or self.width)-24,self.trackH-1,selected and .38 or .16,.31,.33,.26)
+            self:themeRect("accent",12,py,(self.bodyW or self.width)-24,self.trackH-1,selected and .15 or .04)
             local buttonW=math.max(24,self.fontH+8);local buttonH=math.max(22,self.fontH+6)
             local controls=x-3*buttonW-6;local textW=controls-26;local buttonY=py+(self.trackH-buttonH)/2
-            self:drawText(short(p.partName,textW),20,py+4,selected and .88 or .73,selected and .90 or .75,.70,1,UIFont.Small)
-            self:drawText(short(S.names[p.profile+1],textW),20,py+5+self.fontH,.60,.61,.54,1,UIFont.Small)
+            self:themeText(selected and "text"or "muted",short(p.partName,textW),20,py+4)
+            self:themeText("muted",short(S.names[p.profile+1],textW),20,py+5+self.fontH)
             for j,action in ipairs({"mute","solo","record"})do
                 local bx=controls+(j-1)*buttonW;local on=action=="record"and selected or p[action]
                 local label=action=="mute"and "M"or action=="solo"and "S"or "R"
-                self:drawRect(bx,buttonY,buttonW-3,buttonH,1,on and (action=="record"and .48 or .40)or .16,on and (action=="record"and .21 or .43)or .17,on and .25 or .14)
-                self:drawRectBorder(bx,buttonY,buttonW-3,buttonH,1,.38,.40,.32)
+                self:themeRect(on and (action=="record"and "record"or "active")or "panel",bx,buttonY,buttonW-3,buttonH)
+                self:themeBorder("border",bx,buttonY,buttonW-3,buttonH)
                 self:drawText(label,bx+(buttonW-3-getTextManager():MeasureStringX(UIFont.Small,label))/2,buttonY+(buttonH-self.fontH)/2,.88,.87,.78,1,UIFont.Small)
                 self.trackHits[#self.trackHits+1]={x=bx,y=buttonY,w=buttonW-3,h=buttonH,part=i,action=action}
             end
@@ -199,14 +199,14 @@ function A:drawArrangement()
                 local cx=x+(c.start-self.arrFirst)/self.arrTicks*w;local cw=c.length/self.arrTicks*w
                 if cx+cw>x and cx<x+w then
                     local active=selected and ((self.clipSelection and self.clipSelection[j])or j==(self.activeClip or 1));local audible=self:audible(i)
-                    self:drawRect(cx+1,py+4,math.max(2,cw-2),self.trackH-9,audible and .94 or .40,active and .44 or .30,active and .47 or .34,active and .33 or .25)
-                    self:drawRectBorder(cx+1,py+4,math.max(2,cw-2),self.trackH-9,1,active and .72 or .45,active and .75 or .49,active and .55 or .36)
-                    if cw>35 then self:drawText(short(c.name..(c.loopLength and "  [loop]"or ""),cw-12),math.max(x+4,cx+6),py+6,.91,.91,.80,1,UIFont.Small)end
+                    self:themeRect(active and "clipSelected"or "clip",cx+1,py+4,math.max(2,cw-2),self.trackH-9,audible and 1 or .40)
+                    self:themeBorder(active and "selected"or "accent",cx+1,py+4,math.max(2,cw-2),self.trackH-9)
+                    if cw>35 then self:themeText(not audible and "text"or active and "onClipSelected"or "onClip",short(c.name..(c.loopLength and "  [loop]"or ""),cw-12),math.max(x+4,cx+6),py+6)end
                     for _,n in ipairs(notes or {})do if n.t>=c.start and n.t<c.start+c.length then
                         local nx=x+(n.t-self.arrFirst)/self.arrTicks*w
-                        self:drawRect(nx,py+24+(127-n.n)/127*9,math.max(1,n.d/self.arrTicks*w),2,.7,.79,.82,.64)
+                        self:themeRect("selected",nx,py+24+(127-n.n)/127*9,math.max(1,n.d/self.arrTicks*w),2,.7)
                     end end
-                    self:drawRect(cx+cw-5,py+9,2,self.trackH-19,.65,.81,.82,.66)
+                    self:themeRect("selected",cx+cw-5,py+9,2,self.trackH-19,.65)
                     self.trackHits[#self.trackHits+1]={x=math.max(x,cx),y=py+4,w=math.min(x+w,cx+cw)-math.max(x,cx),h=self.trackH-9,part=i,clip=j,resize=cx+cw<=x+w}
                 end
             end

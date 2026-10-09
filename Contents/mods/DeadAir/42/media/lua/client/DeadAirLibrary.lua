@@ -184,12 +184,14 @@ end
 function B:onMouseWheel(delta)self.scroll=clamp(self.scroll+delta*3,0,math.max(0,#self.rows-self.visibleRows));return true end
 function B:prerender()
     ISPanel.prerender(self);self.layerButton:setTitle(self.layer and "Layer: ON"or "Layer: OFF");self.preview:setTitle((self.editor.transport=="library"or self.editor.pending=="library")and "Stop"or "Preview")
+    local p=self.editor.palette
+    local function fill(role,x,y,w,h)local c=p[role];self:drawRect(x,y,w,h,1,c.r,c.g,c.b)end
     self:drawText("CLIP LIBRARY",12,10,.80,.84,.68,1,UIFont.Small)
     if self.search:getText()==""then self:drawText("Search names / folders",18,self.searchY+4,.48,.51,.43,1,UIFont.Small)end
-    self:drawRect(10,self.listY,self.width-20,self.listH,1,.055,.06,.05)
+    fill("base",10,self.listY,self.width-20,self.listH)
     self:setStencilRect(10,self.listY,self.width-20,self.listH)
     for row=1,self.visibleRows do local index=row+self.scroll;local entry=self.rows[index];if entry then local y=self.listY+(row-1)*self.rowH
-        if index==self.selectedRow then self:drawRect(10,y,self.width-20,self.rowH,1,.26,.30,.19)end
+        if index==self.selectedRow then fill("active",10,y,self.width-20,self.rowH)end
         self:drawText(short(entry.name,self.width-32),16,y+3,.83,.85,.73,1,UIFont.Small)
         self:drawText(short(entry.path,self.width-32),16,y+4+self.fontH,.52,.56,.47,1,UIFont.Small)
     end end;self:clearStencilRect()

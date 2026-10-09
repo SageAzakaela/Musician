@@ -30,7 +30,7 @@ and now there's a music workstation in it.
   stay unchanged. Fast audio limits queued audio; actual latency still depends on
   Windows, the device driver and the rest of the audio path.
 
-Current source snapshot: **0.14.2**, targeting **Project Zomboid Build 42.21**.
+Current source snapshot: **0.15.0**, targeting **Project Zomboid Build 42.21**.
 The supported audio-client setup is Windows x64. Other operating systems have not
 been verified. The internal mod ID and Java package remain `DeadAir` for save and
 settings compatibility.
@@ -52,6 +52,19 @@ animations. In-world music can attract zombies; the setting is optional.
 Drag the **Drag to resize tracks** bar between the arrangement and piano roll to
 give either view more room. The size is remembered locally; Escape cancels a drag.
 Scroll over the tracks when there are more than fit in the arrangement.
+
+**View** customizes the Songbook: Balanced, Notes focus and Arrangement focus
+presets; panel visibility; compact/comfortable controls; track height; and themes.
+Choose Zomboid, Charcoal, Slate or High contrast, then a preset accent or a custom
+`#RRGGBB` color. Changes save locally and are never included in shared songs.
+Drag the inspector's left edge or the velocity lane's top edge to resize them.
+**Fit tracks** restores automatic arrangement height; **Reset view** restores the
+layout/colors without changing your music or audio settings.
+
+The inspector's **Edit** tab follows the selected notes, clip or track. **Details**
+keeps song naming and paper-copy controls available. Extra clip operations sit
+under **Advanced**; note fit/zoom, editing scope, snapping and audition controls
+are under **More** above the piano roll.
 
 To fix an existing short loop, select its clip, open **Inspector**, set **Loop bars**
 to the intended cycle (for example `8`), and click **Apply timing**. **Clip bars**

@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.15.0
+
+- Reclaimed space for the music: removed duplicate heading/part rows, grouped
+  the common note tools, moved extra actions into More, and hid shortcut hints
+  by default. The arrangement automatically fits its tracks until manually resized.
+- Added View customization: Balanced, Notes focus and Arrangement focus presets;
+  tracks/velocity/overview/hints toggles; compact or comfortable controls; three
+  track heights; resizable inspector and velocity lane; Fit tracks and Reset view.
+- Added Zomboid, Charcoal, Slate and High contrast themes, preset accent colors,
+  and custom #RRGGBB accents for notes, clips, selections and loop/velocity markers.
+  Note/clip label ink adapts for contrast. Very dark accents are lifted for visibility.
+- The Edit inspector follows note, clip and track selection after gestures finish.
+  Song details stay pinned when chosen; extra controls are folded into Advanced.
+- Layout and colors save locally, including panel sizes and visibility. Existing
+  version-1 layout preferences migrate; Reset view leaves music and audio alone.
+
+Validation: full Lua 5.1 and installed-game Kahlua suites; actual installed Lua
+widget callbacks with strict drawing-argument checks; multi-screen/font/theme
+layouts, custom-color contrast, preference migration/reopen/reset, resize/cancel,
+and unchanged song notes/history. Production Lua render previews reviewed.
+UI/audio/network remain simulated in tests; in-game playtest still required.
+Lua-only update; the Java engine remains 0.13.2.
+
 ## 0.14.2
 
 - The arrangement now resizes smoothly in pixels, even with just one or two tracks.
