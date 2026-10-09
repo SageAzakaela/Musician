@@ -81,7 +81,7 @@ function A:duplicatePhrase()
     if #copied>self:noteRoom()then self.message="Not enough note capacity to duplicate this clip.";return end
     if at+c.length>S.MAX_BARS*384 then return end
     self:checkpoint();self:extendTo(at+c.length);for _,n in ipairs(copied)do self.notes[#self.notes+1]=n end
-    p.clips[#p.clips+1]={name=c.name.." copy",start=at,length=c.length,loopLength=c.loopLength};table.sort(p.clips,function(a,b)return a.start<b.start end)
+    p.clips[#p.clips+1]={name=c.name.." copy",start=at,length=c.length,loopLength=c.loopLength,loopStart=c.loopStart};table.sort(p.clips,function(a,b)return a.start<b.start end)
     for i,other in ipairs(p.clips)do if other.start==at then self:focusClip(i);break end end
     self.arrCache=nil;self:fitArrangement();self:rebuildPitches()
 end
@@ -124,7 +124,7 @@ function A:arrDrag(x,y)
         local minLength=96;for _,n in ipairs(d.notes)do if n.t>=start and n.t<start+length then minLength=math.max(minLength,n.t+n.d-start)end end
         -- Snap the destination edge, not the drag delta. Round the note-protection
         -- boundary UP too, so trimming against a note cannot leave a crooked edge.
-        local minimum=start+(d.old.loopLength or minLength)
+        local minimum=start+(d.old.loopLength and (d.old.loopStart or 0)+d.old.loopLength or minLength)
         local finish=math.max(math.ceil(minimum/step)*step,math.floor((start+length+delta)/step+.5)*step)
         length=finish-start
     end
@@ -132,7 +132,7 @@ function A:arrDrag(x,y)
     if not edited then self.message=err;return true end
     self.song.parts[self.activePart].clips=edited.clips;self.notes=edited.notes;d.applied=true
     local changed=edited.clips[d.clip]
-    self:extendTo(start+length);self.firstTick=start;self.viewTicks=math.max(48,changed.loopLength or length);self.arrCache=nil;self:clampView()
+    self:extendTo(start+length);self.firstTick=start;self.viewTicks=math.max(48,changed.loopLength and (changed.loopStart or 0)+changed.loopLength or length);self.arrCache=nil;self:clampView()
     self.message="Clip starts at bar "..self:clipBars(start+384).."; length "..self:clipBars(length).." bars."
     return true
 end
@@ -196,7 +196,7 @@ function A:drawArrangement()
             for j,c in ipairs(p.clips or {})do
                 local cx=x+(c.start-self.arrFirst)/self.arrTicks*w;local cw=c.length/self.arrTicks*w
                 if cx+cw>x and cx<x+w then
-                    local active=selected and j==(self.activeClip or 1);local audible=self:audible(i)
+                    local active=selected and ((self.clipSelection and self.clipSelection[j])or j==(self.activeClip or 1));local audible=self:audible(i)
                     self:drawRect(cx+1,py+4,math.max(2,cw-2),self.trackH-9,audible and .94 or .40,active and .44 or .30,active and .47 or .34,active and .33 or .25)
                     self:drawRectBorder(cx+1,py+4,math.max(2,cw-2),self.trackH-9,1,active and .72 or .45,active and .75 or .49,active and .55 or .36)
                     if cw>35 then self:drawText(short(c.name..(c.loopLength and "  [loop]"or ""),cw-12),math.max(x+4,cx+6),py+6,.91,.91,.80,1,UIFont.Small)end

@@ -9,6 +9,8 @@ require "DeadAirSongParts"
 require "DeadAirArrangement"
 require "DeadAirLibrary"
 require "DeadAirClipEditing"
+require "DeadAirWorkflow"
+require "DeadAirWorkspace"
 require "MusicianSoundfonts"
 DeadAirSongEditor=ISPanel:derive("DeadAirSongEditor")
 local E,S=DeadAirSongEditor,DeadAirScore
@@ -148,3 +150,5 @@ for name,fn in pairs(DeadAirArrangement)do if type(fn)=="function"then E[name]=f
 for name,fn in pairs(DeadAirLibrary)do if type(fn)=="function"then E[name]=fn end end
 
 for name,fn in pairs(DeadAirClipEditing)do if type(fn)=="function"then E[name]=fn end end
+for name,fn in pairs(DeadAirWorkflow)do if type(fn)=="function"then E[name]=fn end end
+for name,fn in pairs(DeadAirWorkspace)do if type(fn)=="function"then E[name]=fn end end

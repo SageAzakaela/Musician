@@ -20,8 +20,10 @@ function C.validate(value)
                 if type(c)~="table"or not S.integer(c.start,0,value.bars*384-1)or not S.integer(c.length,1,value.bars*384-c.start)then return nil,"Invalid clip range."end
                 clips[j]={name=S.text(c.name,48)or "Clip "..j,start=c.start,length=c.length}
                 if c.loopLength~=nil then
-                    if not S.integer(c.loopLength,1,c.length)then return nil,"Invalid clip loop length."end
+                    local offset=c.loopStart or 0
+                    if not S.integer(offset,0,c.length-1)or not S.integer(c.loopLength,1,c.length-offset)then return nil,"Invalid clip loop range."end
                     clips[j].loopLength=c.loopLength
+                    if offset>0 then clips[j].loopStart=offset end
                 end
             end
             table.sort(clips,function(a,b)return a.start<b.start end)
@@ -49,8 +51,10 @@ function C.expandLoops(part,notes,capacity)
         while lo<=hi do local mid=math.floor((lo+hi)/2);if loops[mid].start<=n.t then index=mid;lo=mid+1 else hi=mid-1 end end
         local c=loops[index]
         if c and n.t<c.start+c.length then
-            if n.t<c.start+c.loopLength then
-                if n.t+n.d>c.start+c.loopLength then return nil,"Keep source notes inside the loop boundary, or Unroll first."end
+            local first=c.start+(c.loopStart or 0)
+            if n.t<first then out[#out+1]=n
+            elseif n.t<first+c.loopLength then
+                if n.t+n.d>first+c.loopLength then return nil,"Keep source notes inside the loop boundary, or Unroll first."end
                 sources[index][#sources[index]+1]=n
             end
         else out[#out+1]=n end
@@ -72,9 +76,10 @@ function C.expandLoops(part,notes,capacity)
     local result={};local outside=1
     for i,c in ipairs(loops)do local source=sources[i]
         if #source>0 then
-            while out[outside]and out[outside].t<c.start do result[#result+1]=out[outside];outside=outside+1 end
+            local first=c.start+(c.loopStart or 0)
+            while out[outside]and out[outside].t<first do result[#result+1]=out[outside];outside=outside+1 end
             order(source)
-            for offset=0,c.length-1,c.loopLength do for _,n in ipairs(source)do local at=n.t+offset
+            for offset=0,c.length-(c.loopStart or 0)-1,c.loopLength do for _,n in ipairs(source)do local at=n.t+offset
                 if at>=c.start+c.length then break end
                 result[#result+1]=offset==0 and n or {n=n.n,t=at,d=math.min(n.d,c.start+c.length-at),v=n.v}
             end end
@@ -85,15 +90,16 @@ function C.expandLoops(part,notes,capacity)
 end
 -- Retiming takes the editable source from the OLD range. In particular, growing
 -- a loop must not turn a generated repeat into new source notes.
-function C.retimeClip(part,notes,index,start,length,loopLength,capacity)
+function C.retimeClip(part,notes,index,start,length,loopLength,capacity,loopStart)
     local old=part.clips and part.clips[index]
     if not old then return nil,"Select a clip first."end
     if not S.integer(start,0,S.MAX_BARS*384-1)or not S.integer(length,1,S.MAX_BARS*384-start)then return nil,"Clip timing is outside the song's timeline capacity."end
-    if loopLength~=nil and not S.integer(loopLength,1,length)then return nil,"Loop length must fit inside the clip length."end
+    loopStart=loopLength and (loopStart or old.loopStart or 0)or 0
+    if loopLength~=nil and (not S.integer(loopStart,0,length-1)or not S.integer(loopLength,1,length-loopStart))then return nil,"Loop range must fit inside the clip length."end
     for i,c in ipairs(part.clips)do if i~=index and start<c.start+c.length and start+length>c.start then
         return nil,"Clips cannot overlap. Leave room before the next clip."
     end end
-    local sourceEnd=old.start+(old.loopLength or old.length);local sourceLength=loopLength or length
+    local sourceEnd=old.start+(old.loopLength and (old.loopStart or 0)+old.loopLength or old.length);local sourceLength=loopLength and loopStart+loopLength or length
     local retained={}
     for _,n in ipairs(notes)do
         if n.t>=old.start and n.t<old.start+old.length then
@@ -105,6 +111,7 @@ function C.retimeClip(part,notes,index,start,length,loopLength,capacity)
     end
     local clips=S.copy(part.clips);local changed=clips[index]
     changed.start=start;changed.length=length;changed.loopLength=loopLength
+    changed.loopStart=loopLength and loopStart>0 and loopStart or nil
     local expanded,err=C.expandLoops({clips=clips},retained,capacity)
     if not expanded then return nil,err end
     return {clips=clips,notes=expanded}

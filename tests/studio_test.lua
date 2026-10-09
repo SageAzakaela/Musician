@@ -20,13 +20,14 @@ e=E:new(paper(),score);e:initialise();e:setVisible(true);e.hear=false
 local part=e.song.parts[1];part.clips={{name='Intro',start=0,length=768},{name='Answer',start=1536,length=768}}
 e.notes[3]={n=67,t=1536,d=96,v=90};assert(e:settings());e:fitArrangement();e:prerender()
 local hit;for _,r in ipairs(e.trackHits)do if r.clip==1 then hit=r end end;assert(hit)
-local x,y=hit.x+20,hit.y+15;e:onMouseDown(x,y);assert(e.drag.kind=='clipMove')
+local x,y=hit.x+20,hit.y+15;e:onMouseDown(x,y);assert(e.drag.kind=='clipGroup')
 e.mx=x+384/e.arrTicks*e.arrW;e.my=y;e:onMouseMove(1,0);e:onMouseUp(e.mx,y)
 assert(e.notes[1].t==384 and e.notes[2].t==768 and e.notes[3].t==1536)
 assert(e:settings()and #e.song.parts[1].clips==2 and e.song.parts[1].clips[1].start==384,'Move produced a phantom phrase')
 e:undo();assert(e.notes[1].t==0 and e.song.parts[1].clips[1].start==0)
 e:undo(true);assert(e.notes[1].t==384 and e.song.parts[1].clips[1].start==384)
 e:prerender();for _,r in ipairs(e.trackHits)do if r.clip==1 then hit=r end end
+e.arrGrid.selected=3 -- quarter-note arrangement snapping for this trim test
 x,y=hit.x+hit.w-2,hit.y+12;e:onMouseDown(x,y);assert(e.drag.kind=='clipEnd')
 e.mx=x-768/e.arrTicks*e.arrW;e.my=y;e:onMouseMove(-1,0);e:onMouseUp(e.mx,y)
 assert(e.song.parts[1].clips[1].length==480 and e.notes[2].t+e.notes[2].d==864,'Phrase trim cut a note')

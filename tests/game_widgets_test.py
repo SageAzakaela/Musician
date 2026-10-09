@@ -32,6 +32,7 @@ for name in ['Layout/ISDock','Layout/ISBounds','ISUIElement','ISPanel','ISPanelJ
     lua.execute((a.game/'media/lua/client/ISUI'/f'{name}.lua').read_text(encoding='utf-8-sig'))
 lua.execute((mod/'client/DeadAirLibrary.lua').read_text(encoding='utf-8'))
 lua.execute((mod/'client/MusicianSoundfonts.lua').read_text(encoding='utf-8'))
+lua.execute((mod/'client/DeadAirWorkspace.lua').read_text(encoding='utf-8'))
 lua.execute((mod/'client/DeadAirSongEditor.lua').read_text(encoding='utf-8'))
 lua.execute('''
 local e=DeadAirSongEditor:new(paper(),DeadAirScore.new());e:initialise();e:setVisible(true)

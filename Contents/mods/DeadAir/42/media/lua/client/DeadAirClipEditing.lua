@@ -8,16 +8,18 @@ function Q:clipBars(ticks)return (string.format("%.6f",ticks/384):gsub("0+$","")
 function Q:refreshClipTiming(force)
     if not self.clipStartEntry then return end
     local c=self:currentClip();local p=self.song.parts[self.activePart]
-    local signature=c and table.concat({p.part,self.activeClip,c.start,c.length,c.loopLength or 0},":")or "none"
+    local signature=c and table.concat({p.part,self.activeClip,c.start,c.length,c.loopLength or 0,c.loopStart or 0},":")or "none"
     if force or signature~=self.clipTimingSignature then
         self.clipTimingSignature=signature
         self.clipStartEntry:setText(c and self:clipBars(c.start+384)or "")
         self.clipLengthEntry:setText(c and self:clipBars(c.length)or "")
         self.clipLoopEntry:setText(c and c.loopLength and self:clipBars(c.loopLength)or "")
+        if self.loopStartEntry then self.loopStartEntry:setText(c and c.loopLength and self:clipBars(c.start+(c.loopStart or 0)+384)or "")end
     end
     local editable=c~=nil and not(self.transport or self.pending or self.saving)
     self.clipStartEntry:setEditable(editable);self.clipLengthEntry:setEditable(editable)
     self.clipLoopEntry:setEditable(editable and c.loopLength~=nil or false)
+    if self.loopStartEntry then self.loopStartEntry:setEditable(editable and c.loopLength~=nil or false)end
     self.clipApplyButton:setEnable(editable)
 end
 function Q:toggleClipTiming()
@@ -45,13 +47,13 @@ function Q:applyClipTiming()
 end
 function Q:editBounds()
     local c=self:currentClip()
-    if c and not self.editWholeTrack then return c.start,c.start+(c.loopLength or c.length)end
+    if c and not self.editWholeTrack then return c.start,c.start+(c.loopLength and (c.loopStart or 0)+c.loopLength or c.length)end
     return 0,self:ticks()
 end
 function Q:noteEditable(n)
     local lo,hi=self:editBounds();if n.t<lo or n.t>=hi then return false end
     for _,c in ipairs(self.song.parts[self.activePart].clips)do
-        if c.loopLength and n.t>=c.start+c.loopLength and n.t<c.start+c.length then return false end
+        if c.loopLength and n.t>=c.start+(c.loopStart or 0)+c.loopLength and n.t<c.start+c.length then return false end
     end
     return true
 end
@@ -141,7 +143,7 @@ function Q:deletePart(index)
 end
 function Q:focusClip(index)
     self.editWholeTrack=false;A.focusClip(self,index)
-    local c=self:currentClip();if c then self.firstTick=c.start;self.viewTicks=math.max(48,c.loopLength or c.length);self:clampView()end
+    local c=self:currentClip();if c then self.firstTick=c.start;self.viewTicks=math.max(48,c.loopLength and (c.loopStart or 0)+c.loopLength or c.length);self:clampView()end
     self.editContext="clip";self:refreshClipTiming(true)
 end
 function Q:toggleEditScope()
@@ -188,7 +190,7 @@ end
 function Q:unrollClip()
     if not self:editable()or not self:settings()then return end
     local c=self:currentClip();if not c or not c.loopLength then return end
-    self:checkpoint();c.loopLength=nil;self:focusClip(self.activeClip);self.arrCache=nil
+    self:checkpoint();c.loopLength=nil;c.loopStart=nil;self:focusClip(self.activeClip);self.arrCache=nil
     self.message="Unrolled. Every repetition is now independently editable. Ctrl+Z restores the loop."
 end
 function Q:joinTrackClips()
@@ -231,7 +233,7 @@ function Q:insertLibraryClip(clip,drop,layer)
     local target,chosen;local finish=at+clip.length
     if drop.zone=="roll"then
         for i,c in ipairs(p.clips)do if at>=c.start and at<c.start+c.length then target=c;chosen=i;break end end
-        if target and target.loopLength and finish>target.start+target.loopLength then self.message="This drop crosses the loop source boundary. Unroll, or choose a shorter pattern.";return false end
+        if target and target.loopLength and finish>target.start+(target.loopStart or 0)+target.loopLength then self.message="This drop crosses the loop source boundary. Unroll, or choose a shorter pattern.";return false end
         if target then
             for _,c in ipairs(p.clips)do if c~=target and at<c.start+c.length and finish>c.start then self.message="That drop crosses another clip. Shorten it or Join track first.";return false end end
             target.length=math.max(target.length,finish-target.start)
@@ -294,7 +296,8 @@ function Q:drawLoopGuides()
             local step=c.loopLength;while step/self.arrTicks*self.arrW<12 do step=step*2 end
             local y=self.arrY+self.arrRulerH+(row-1)*self.trackH
             self:setStencilRect(self.trackW,y,self.arrW,self.trackH)
-            for t=c.start+math.max(1,math.ceil((self.arrFirst-c.start)/step))*step,math.min(c.start+c.length-1,self.arrFirst+self.arrTicks),step do
+            local first=c.start+(c.loopStart or 0)
+            for t=first+math.max(1,math.ceil((self.arrFirst-first)/step))*step,math.min(c.start+c.length-1,self.arrFirst+self.arrTicks),step do
                 self:drawRect(self.trackW+(t-self.arrFirst)/self.arrTicks*self.arrW,y+5,1,self.trackH-12,.65,.84,.83,.63)
             end
             self:clearStencilRect()

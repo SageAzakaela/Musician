@@ -19,8 +19,10 @@ and now there's a music workstation in it.
   and preview individual parts or the whole song privately.
 - Import MIDI clips, drag chords onto a root note, move and loop phrases, and use the
   included procedural chords, progressions and drum patterns.
-- Set exact clip and loop lengths through **Timing**. Arrangement moves and edge
-  drags snap their destination to the grid, including clips that started off-grid.
+- Drag a loop brace or set exact timing in the **Inspector**. Clip and note grids
+  snap independently, with fixed/adaptive intervals and an off setting.
+- Select and move several clips, split at the cursor, consolidate a phrase, or make
+  one repetition unique for a fill. Clip edits participate in undo/redo.
 - Copy written music, share parts, and coordinate an ensemble start. Nearby players
   can also hear live MIDI performances. Multiplayer remains experimental.
 - Load personal SF2 soundfonts or soundfont-pack mods and map presets to instruments.
@@ -28,7 +30,7 @@ and now there's a music workstation in it.
   stay unchanged. Fast audio limits queued audio; actual latency still depends on
   Windows, the device driver and the rest of the audio path.
 
-Current source snapshot: **0.13.3**, targeting **Project Zomboid Build 42.21**.
+Current source snapshot: **0.14.0**, targeting **Project Zomboid Build 42.21**.
 The supported audio-client setup is Windows x64. Other operating systems have not
 been verified. The internal mod ID and Java package remain `DeadAir` for save and
 settings compatibility.
@@ -47,12 +49,33 @@ paper to write a song.
 **F10** shows the performance panel, **F11** stops notes, and **F12** toggles playing
 animations. In-world music can attract zombies; the setting is optional.
 
-To fix an existing short loop, select its clip, open **Timing**, set **Loop length
-(bars)** to the intended cycle (for example `8`), and click **Apply timing**. **Clip
-length** is the full arrangement span: `48` repeats an eight-bar source six times.
+To fix an existing short loop, select its clip, open **Inspector**, set **Loop bars**
+to the intended cycle (for example `8`), and click **Apply timing**. **Clip bars**
+is the full arrangement span: `48` repeats an eight-bar source six times.
 Fractions work too: `0.25` is one beat. Source notes keep their timing and velocity;
 an edit that would cut them or overlap another clip is rejected. Undo restores the
 previous timing. Existing songs are not automatically rounded on load.
+
+Drag the brace above the piano roll to set the loop range. Notes before its start
+play once; the notes inside repeat. The 1/2/4/8-bar buttons set quick lengths.
+Shift-drag that strip to select time, then **Ctrl+L** to loop it; selected notes work
+too. If later source notes would be cut, split those into another clip first.
+
+**Ctrl-click** toggles clips in a selection; **Shift-click** selects a range on the
+same track. Drag the group to move it, or **Ctrl+D** to duplicate it with its gaps.
+**Ctrl+E** splits at the cursor, including sustained notes. **Ctrl+J** consolidates
+selected clips into one editable phrase. Right-click the repetition you want to
+change and choose **Make this repeat unique** for a variation. Splitting and
+consolidating retain the played notes and remove looping from the affected pieces.
+
+The **Clips** and **Notes** menus control separate snap grids. **Fixed** keeps the
+chosen interval; **Auto** widens it as you zoom out and shows the actual interval.
+Hold **Alt** while dragging a clip or loop handle to bypass snapping. Drag the
+divider between tracks and notes to change their space. The window size, divider,
+snap preferences and inspector visibility are remembered locally on close.
+
+Playback still needs to be stopped before editing notes or clips. Update server
+and clients together: older versions do not understand an offset loop start.
 
 ## Building from source
 

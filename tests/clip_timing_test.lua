@@ -25,7 +25,7 @@ end
 -- A 7.875-bar edge must reach bar 9 on the 1/1 grid. Snapping the delta
 -- rounds this small repair to zero and leaves every repetition early.
 local e,sheet=fresh({{n=38,t=0,d=24,v=90},{n=45,t=2976,d=48,v=71}},{{name='Take',start=0,length=3024}},8)
-e.grid.selected=1;e:fitArrangement();drag(e,'clipEnd',48)
+e.arrGrid.selected=1;e:fitArrangement();drag(e,'clipEnd',48)
 assert(e:currentClip().length==3072,'Off-grid clip edge stayed off-grid')
 assert(e.notes[2].t==2976 and e.notes[2].d==48)
 e:toggleLoop();assert(e:currentClip().loopLength==3072)
@@ -37,7 +37,7 @@ e.notes[2].d=74;assert(e:settings());assert(e:currentClip().length==3050)
 drag(e,'clipEnd',-384);assert(e:currentClip().length==3072 and e.notes[2].d==74)
 e:close()
 e=fresh({{n=60,t=85,d=30,v=73}},{{name='Offset',start=48,length=768}},8)
-e.grid.selected=1;e:fitArrangement();drag(e,'clipMove',336)
+e.arrGrid.selected=1;e:fitArrangement();drag(e,'clipGroup',336)
 assert(e:currentClip().start==384 and e.notes[1].t==421,'Move retained an off-grid start or quantized the performance')
 e:undo();assert(e:currentClip().start==48 and e.notes[1].t==85);e:close()
 -- Repair an existing six-cycle take. Old generated notes at tick 3024
@@ -46,7 +46,7 @@ local original={{n=38,t=0,d=24,v=90},{n=45,t=2990,d=24,v=71},{n=77,t=19981,d=31,
 local clips={{name='Take',start=0,length=18144,loopLength=3024},{name='Neighbor',start=19968,length=384}}
 e,sheet=fresh(original,clips);assert(e:syncLoops());assert(#e.notes==13)
 local before=S.encode(e.notes)
-click(e.clipTimingButton)
+e.inspectorOpen=false;click(e.clipTimingButton)
 assert(e.clipTiming and e.clipLoopEntry:getText()=='7.875')
 e.clipLoopEntry:setText('8');e.clipLengthEntry:setText('48');e:prerender()
 assert(e.clipLoopEntry:getText()=='8','Rendering overwrote a pending timing edit')
@@ -85,7 +85,7 @@ e:close()
 -- The exact controls must stay accessible with the library and larger fonts.
 for _,size in ipairs({{1024,768,18},{1280,720,16},{1920,1080,22}})do
     screenWidth,screenHeight,fontHeight=size[1],size[2],size[3]
-    e=fresh({{n=60,t=0,d=96,v=90}},{{name='Clip',start=0,length=3072}},8);e:toggleClipTiming()
+    e=fresh({{n=60,t=0,d=96,v=90}},{{name='Clip',start=0,length=3072}},8);e.inspectorOpen=false;e:toggleClipTiming()
     for _,library in ipairs({false,true})do
         if library then e:toggleLibrary()end
         e:layout();e:prerender();assert(e.gridH>=96 and e.gridY+e.gridH<=e.overviewY)

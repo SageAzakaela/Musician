@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.14.0
+
+- Added a draggable piano-roll loop brace, 1/2/4/8-bar presets, and Loop selection
+  (Ctrl+L). A loop may start after an intro that plays once. Exact clip/loop start
+  and length fields live in the Inspector; shortening protects source notes.
+- Clip and note snapping are independent. Each has fixed/adaptive modes and an off
+  setting. Adaptive shows its actual interval; Alt bypasses clip/brace snapping.
+- Ctrl/Shift-click selects several clips on a track. Move, duplicate and delete
+  operate on that group and preserve gaps. Ctrl+E splits at the cursor; Ctrl+J
+  consolidates selected clips. Right-click a repetition to make it an independent
+  variation. All song edits support undo/redo, including split held notes.
+- Moved clip settings into a collapsible inspector. Added a resizable tracks/notes
+  divider, dimmed repetition context, Fit clip, and scrollable shortcut help.
+  The inspector scrolls on small screens. Window/divider/snap preferences are saved
+  locally when closing the editor and never sent with songs.
+- Existing songs remain readable. Update multiplayer clients and server together
+  for the new loop-start metadata. Editing during playback remains unsupported.
+- Lua-only update; the distributed 0.13.2 Java engine and audio assets are unchanged.
+
+Validation: full Lua/editor/simulated-network suite, production clip operations,
+loop/selection mouse and keyboard paths, atomic capacity/overlap rejection, undo,
+save/reopen/playback, installed-game widget callbacks with Java UI stand-ins, and
+rendered layouts at three sizes. Actual in-game visuals/listening remain pending.
+
 ## 0.13.3
 
 - Clip moves and edge drags snap the destination to the grid. An off-grid clip no

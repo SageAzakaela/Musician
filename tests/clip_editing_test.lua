@@ -8,7 +8,7 @@ local function fresh(notes,bars)
     return e,sheet
 end
 local function resize(e,length,cancel)
-    e:fitArrangement();e:prerender();local hit
+    e.arrGrid.selected=3;e:fitArrangement();e:prerender();local hit
     for _,r in ipairs(e.trackHits)do if r.part==e.activePart and r.clip==e.activeClip then hit=r end end
     assert(hit and hit.resize);local old=e:currentClip().length
     local x,y=hit.x+hit.w-2,hit.y+8;e:onMouseDown(x,y);assert(e.drag.kind=='clipEnd')
@@ -57,7 +57,7 @@ e:joinTrackClips();assert(#e.song.parts[1].clips==1 and not e:currentClip().loop
 -- Moving and duplicating a loop keep its source/repeats aligned and its neighbor intact.
 local sourceWire=S.encode(e.notes)
 e:fitArrangement();e:prerender();local r;for _,hit in ipairs(e.trackHits)do if hit.part==1 and hit.clip==1 then r=hit end end
-e:onMouseDown(r.x+10,r.y+10);assert(e.drag.kind=='clipMove');e.mx=r.x+10+384/e.arrTicks*e.arrW;e.my=r.y+10;e:onMouseMove(1,0);e:onMouseUp(e.mx,e.my)
+e:onMouseDown(r.x+10,r.y+10);assert(e.drag.kind=='clipGroup');e.mx=r.x+10+384/e.arrTicks*e.arrW;e.my=r.y+10;e:onMouseMove(1,0);e:onMouseUp(e.mx,e.my)
 assert(e:currentClip().start==384 and e:currentClip().loopLength==384 and #e.notes==9)
 for _,n in ipairs(e.notes)do if n.n~=76 then assert(n.t>=384 and n.t<1344)end end
 e:undo();assert(S.equal(sourceWire,S.encode(e.notes)))

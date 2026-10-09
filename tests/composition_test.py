@@ -25,7 +25,8 @@ function UI:unfocus()self.focused=false end;function UI:isFocused()return self.f
 fontHeight=14;screenWidth=1280;screenHeight=720
 function getTextManager()return {getFontHeight=function()return fontHeight end,MeasureStringX=function(_,font,s)return #s*fontHeight*.48 end}end
 function getCore()return {isDoingTextEntry=function()return typing end,getScreenWidth=function()return screenWidth end,getScreenHeight=function()return screenHeight end}end
-for i,name in ipairs({'B','SPACE','DELETE','BACK','ESCAPE','LEFT','RIGHT','UP','DOWN','ADD','SUBTRACT','EQUALS','MINUS','F','T','A','C','X','V','D','Z','Y','S','U'})do Keyboard['KEY_'..name]=100+i end
+for i,name in ipairs({'B','SPACE','DELETE','BACK','ESCAPE','LEFT','RIGHT','UP','DOWN','ADD','SUBTRACT','EQUALS','MINUS','F','T','A','C','X','V','D','Z','Y','S','U','E','J','L'})do Keyboard['KEY_'..name]=100+i end
+ISContextMenu={get=function()return {options={},addOption=function(self,title,target,fn,...)local o={title=title,target=target,fn=fn,args={...}};self.options[#self.options+1]=o;return o end}end}
 function isCtrlKeyDown()return ctrlDown==true end;function isShiftKeyDown()return shiftDown==true end;function isAltKeyDown()return altDown==true end
 function UI:setTooltip(t)self.tooltip=t end
 function UI:setText(v)self.text=v end;function UI:getText()return self.text end
@@ -84,8 +85,8 @@ for path in ['media/lua/shared/ISBaseObject.lua','media/lua/shared/TimedActions/
 mod=root/'Contents/mods/DeadAir/42/media/lua'
 for path in mod.rglob('*.lua'):
     lua.execute('assert(loadstring(...))',path.read_text(encoding='utf-8'))
-for name in ['DeadAirScore','DeadAirComposition','DeadAirPaper','DeadAirKit']:lua.execute((mod/'shared'/f'{name}.lua').read_text(encoding='utf-8'))
-for name in ['MusicianSoundfonts','DeadAirInstruments','DeadAirMotion','DeadAirDrumMotion','DeadAirPerformanceAction','DeadAirWorld','DeadAir','DeadAirRoll','DeadAirRollView','DeadAirSongParts','DeadAirArrangement','DeadAirPatterns','DeadAirLibrary','DeadAirClipEditing','DeadAirSongEditor','DeadAirSongs']:
+for name in ['DeadAirScore','DeadAirComposition','DeadAirClipOps','DeadAirPaper','DeadAirKit']:lua.execute((mod/'shared'/f'{name}.lua').read_text(encoding='utf-8'))
+for name in ['MusicianSoundfonts','DeadAirInstruments','DeadAirMotion','DeadAirDrumMotion','DeadAirPerformanceAction','DeadAirWorld','DeadAir','DeadAirRoll','DeadAirRollView','DeadAirSongParts','DeadAirArrangement','DeadAirPatterns','DeadAirLibrary','DeadAirClipEditing','DeadAirWorkflow','DeadAirWorkspace','DeadAirSongEditor','DeadAirSongs']:
     lua.execute((mod/'client'/f'{name}.lua').read_text(encoding='utf-8'))
 lua.execute('''
 local D,S,C=DeadAir,DeadAirScore,DeadAir.Songs
@@ -209,6 +210,7 @@ lua.execute((root/'tests/studio_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/library_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/clip_editing_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/clip_timing_test.lua').read_text(encoding='utf-8'))
+lua.execute((root/'tests/workflow_test.lua').read_text(encoding='utf-8'))
 
 lua.execute('client=false;server=false;DeadAir.cleanup();player.inventory=inventory({item});player.moving=false')
 lua.execute((root/'tests/world_test.lua').read_text(encoding='utf-8'))

@@ -9,8 +9,8 @@ for _,name in ipairs({'OnFillInventoryObjectContextMenu','OnFillWorldObjectConte
 end
 function fire(name,...) for _,f in ipairs(Events[name].handlers) do f(...) end end
 local saved={};local index=0
-function getFileWriter() saved={};return {write=function(self,s)table.insert(saved,s)end,close=function()end} end
-function getFileReader() index=0;return {readLine=function()index=index+1;return saved[index]end,close=function()end} end
+function getFileWriter(name) if name=='MusicianEditorLayout.ini' then return nil end;saved={};return {write=function(self,s)table.insert(saved,s)end,close=function()end} end
+function getFileReader(name) if name=='MusicianEditorLayout.ini' then return nil end;index=0;return {readLine=function()index=index+1;return saved[index]end,close=function()end} end
 luautils={split=function(s,sep)local t={};for p in s:gmatch('[^'..sep..'\r\n]+')do t[#t+1]=p end;return t end}
 UI={}
 function UI:derive(name)local o={};setmetatable(o,{__index=self});o.__index=o;return o end
