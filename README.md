@@ -30,7 +30,7 @@ and now there's a music workstation in it.
   stay unchanged. Fast audio limits queued audio; actual latency still depends on
   Windows, the device driver and the rest of the audio path.
 
-Current source snapshot: **0.14.0**, targeting **Project Zomboid Build 42.21**.
+Current source snapshot: **0.14.1**, targeting **Project Zomboid Build 42.21**.
 The supported audio-client setup is Windows x64. Other operating systems have not
 been verified. The internal mod ID and Java package remain `DeadAir` for save and
 settings compatibility.
@@ -74,6 +74,11 @@ Hold **Alt** while dragging a clip or loop handle to bypass snapping. Drag the
 divider between tracks and notes to change their space. The window size, divider,
 snap preferences and inspector visibility are remembered locally on close.
 
+Recording follows the incoming pitch range when **Follow** is enabled. The roll
+temporarily shows every pitch during a take, then restores scale/fold filters at
+Stop. Recording over a loop preserves its repetitions and makes the touched clip
+independent so the new notes can be edited; Undo restores the original loop.
+
 Playback still needs to be stopped before editing notes or clips. Update server
 and clients together: older versions do not understand an offset loop start.
 
@@ -99,7 +104,12 @@ audio tests, first import the runtime assets described in [BUILDING.md](docs/BUI
 ```powershell
 python build.py --game "C:\Program Files (x86)\Steam\steamapps\common\ProjectZomboid" --input-test --sampler-test
 python tests/lua_test.py --game "C:\Program Files (x86)\Steam\steamapps\common\ProjectZomboid"
+python tests/game_lua_test.py --game "C:\Program Files (x86)\Steam\steamapps\common\ProjectZomboid"
 ```
+
+The second Lua command runs the same fixtures through the installed game's Kahlua
+VM. It needs `javac`, or `--ecj path/to/ecj.jar`. UI, audio and network peers are
+still simulated; this does not launch a game, open a device, or modify a save.
 
 The Lua tests also require `lupa` with its Lua 5.1 runtime. The commands above do not
 open MIDI or audio devices. Optional hardware probes are separate flags.

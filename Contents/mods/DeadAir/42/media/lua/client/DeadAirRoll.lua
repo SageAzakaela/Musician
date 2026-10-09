@@ -52,12 +52,32 @@ function R:rebuildPitches()
     self.pitches={};self.pitchIndex={}
     local seen={};for _,n in ipairs(self.notes)do seen[n.n]=true end
     for n=127,0,-1 do
-        if (not self.fold or #self.notes==0 or seen[n]) and (not self.scaleOnly or self:inScale(n))then self.pitches[#self.pitches+1]=n end
+        if self.transport=="record"or ((not self.fold or #self.notes==0 or seen[n]) and (not self.scaleOnly or self:inScale(n)))then self.pitches[#self.pitches+1]=n end
     end
     if #self.pitches==0 then for n=127,0,-1 do if not self.scaleOnly or self:inScale(n)then self.pitches[#self.pitches+1]=n end end end
     for i,n in ipairs(self.pitches)do self.pitchIndex[n]=i-1 end
     self.pitchScroll=clamp(self.pitchScroll or 44,0,math.max(0,#self.pitches-(self.rows or 24)))
     self.topNote=self.pitches[math.floor(self.pitchScroll)+1] or 127
+end
+-- Center musical material, not the top of the MIDI range. This only changes the
+-- viewport; pitches, scale settings and recorded timing remain untouched.
+function R:centerPitchRange(low,high)
+    if not self.rows or not self.pitches or #self.pitches==0 then return end
+    local top,bottom
+    for i,pitch in ipairs(self.pitches)do if pitch>=low and pitch<=high then top=top or i-1;bottom=i-1 end end
+    if not top then
+        local target=(low+high)/2;local distance=128
+        for i,pitch in ipairs(self.pitches)do if math.abs(pitch-target)<distance then top=i-1;bottom=i-1;distance=math.abs(pitch-target)end end
+    end
+    if bottom-top+5>self.rows then
+        self.rowH=clamp(math.floor(self.availableGridH/(bottom-top+5)),10,self.rowH);self:layout()
+    end
+    self.pitchScroll=(top+bottom)/2-(self.rows-1)/2;self:clampView()
+end
+function R:recordPitch(pitch)
+    if not S.integer(pitch,0,127)then return end
+    self.recordPitchLow=math.min(self.recordPitchLow or pitch,pitch);self.recordPitchHigh=math.max(self.recordPitchHigh or pitch,pitch)
+    if self.follow and not self.drag then self:centerPitchRange(self.recordPitchLow,self.recordPitchHigh)end
 end
 function R:clampView()
     self.viewTicks=clamp(self.viewTicks,48,self:ticks())

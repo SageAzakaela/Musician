@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.14.1
+
+- Fixed the 0.14.0 clip-selection crash that also prevented recording from starting.
+  Zomboid's Kahlua VM has no global `next`; the previous Lua 5.1-only editor tests
+  missed that incompatibility. Recording now prepares its undo state before audio
+  starts, and the full editor regression suite also runs in the installed game VM.
+- Recording follows the take past the original clip boundary. Stop combines the
+  final take with the original notes exactly once, including held notes, and saves
+  it into the existing clip when applicable. Empty takes do not add clips.
+- Overdubbing a loop keeps its existing repetitions and makes the touched clip
+  independent, so recorded notes cannot disappear when loop repeats rebuild.
+  Unrelated clips retain their notes and lengths. Undo restores the original loop.
+- Empty piano rolls start around middle C. Follow centers the recording's actual
+  pitch range, including a held first note; turn Follow off for manual navigation.
+  Recording temporarily shows all pitches so scale/fold filters cannot hide input.
+  Filters return after Stop. Undo restores the previous vertical zoom as well.
+
+Validation: reproduced the crash in the actual game Kahlua VM before the fix; full
+editor/widget/simulated-network suite passes there afterward. Added recording,
+loop overdub, note retention, empty/full clip list, view-follow and save/reopen
+checks. UI/audio hardware remain simulated; in-game listening still needs a check.
+Lua-only hotfix; the Java engine remains 0.13.2.
+
 ## 0.14.0
 
 - Added a draggable piano-roll loop brace, 1/2/4/8-bar presets, and Loop selection

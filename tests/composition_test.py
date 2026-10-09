@@ -115,8 +115,9 @@ assert(not S.decode('60,0,5,90;junk',384));assert(not S.decode('60,383,5,90;',38
 local first,extra,third=paper(),paper(),paper();player.inventory=inventory({item,first,extra,third})
 local written=paper();written.page='a private note';assert(not S.blank(written))
 C.open(first);local e=C.editor;assert(D.editorActive and #e.notes==0)
+local drawnPitch=e:pitchAt(e.gridY+3*e.rowH)
 e:onMouseDown(e.gridX+8,e.gridY+3*e.rowH);e.mx=e.gridX+80;e.my=e.gridY+3*e.rowH;e:onMouseMove(1,0);e:onMouseUp(0,0)
-assert(#e.notes>1 and e.notes[1].d==24 and e.notes[1].n==80)
+assert(#e.notes>1 and e.notes[1].d==24 and e.notes[1].n==drawnPitch)
 e:save();assert(S.read(first) and first.custom and e.score.revision==1)
 local song=S.read(first).song;local part=S.read(first).part
 e:paperAction('copy');assert(S.read(extra).song==song and S.read(extra).part==part)
@@ -211,6 +212,7 @@ lua.execute((root/'tests/library_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/clip_editing_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/clip_timing_test.lua').read_text(encoding='utf-8'))
 lua.execute((root/'tests/workflow_test.lua').read_text(encoding='utf-8'))
+lua.execute((root/'tests/recording_regression_test.lua').read_text(encoding='utf-8'))
 
 lua.execute('client=false;server=false;DeadAir.cleanup();player.inventory=inventory({item});player.moving=false')
 lua.execute((root/'tests/world_test.lua').read_text(encoding='utf-8'))

@@ -54,14 +54,20 @@ function E:startPending()
     local parts=self.pendingParts;self.pendingParts=nil
     local err=DeadAirMidi.scoreLoad(parts,self.score.bpm,library and self.pendingClip.length or record and 0 or self.score.bars*384-self.playFrom,not library and self.metronome)
     if err~="" then self.message=err;return end
+    -- Prepare the undo state before starting either transport or MIDI capture.
+    if record then
+        self:checkpoint();self.recordBase=S.copy(self.notes);self.recordOldBars=self.score.bars
+        self.recordOrigin=self.playFrom or 0;self.recordSeen=0;self.recordDrawAt=0
+        self.recordPitchLow=nil;self.recordPitchHigh=nil
+        local state=DeadAirMidi.motionState and DeadAirMidi.motionState();self.recordAttack=state and state.attack
+    end
     self.transport=library and "library"or record and "record" or "preview"
     local countIn=record and 4*60000/self.score.bpm or 0
     self.started=DeadAirMidi.clock()+countIn
     DeadAir.configure()
     DeadAirMidi.scoreStart(countIn);if library then DeadAirMidi.scoreGain(0,1)else self:applyTrackGains()end
     if record then
-        self:checkpoint();self:updateMonitor()
-        self.recordSeen=0;self.recordBase=S.copy(self.notes);self.recordDrawAt=0;self.recordOldBars=self.score.bars
+        self:updateMonitor();self:rebuildPitches()
         DeadAirMidi.recordStartOpen(self.score.bpm,DeadAir.value("channel")-1,4,self:noteRoom())
     end
     if library then self.message="Private clip preview: "..self.pendingClip.name..". "..(self.pendingClip.warning or "");self.pendingClip=nil;return end
@@ -72,18 +78,49 @@ function E:stop()
     self.pending=nil;self.pendingParts=nil;self.pendingClip=nil;self:stopAudition()
     if DeadAir.api() then
         if self.transport=="record" then
-            local take=DeadAirMidi.recordStop();self.notes=self.recordBase or self.notes;local added=0
-            for _,n in ipairs(take)do n.t=n.t+(self.playFrom or 0);self.notes[#self.notes+1]=n;added=added+1 end
-            local finish=math.max(384,self:transportTick());for _,n in ipairs(self.notes)do finish=math.max(finish,n.t+n.d)end
-            self.score.bars=math.max(self.recordOldBars or 1,math.ceil(finish/384));self.song.bars=self.score.bars
-            self:extendTo(finish);local p=self.song.parts[self.activePart]
-            p.clips[#p.clips+1]={name="Take "..(#p.clips+1),start=self.playFrom or 0,length=math.max(96,math.ceil(finish/384)*384-(self.playFrom or 0))}
-            DeadAirComposition.cover(p,self.notes);self.arrCache=nil;self.recordBase=nil;self.recordSeen=nil
+            local take=DeadAirMidi.recordStop();local origin=self.recordOrigin or self.playFrom or 0
+            -- Incremental display is provisional. Stop returns the complete take,
+            -- including held notes; combine it with the original only once.
+            self.notes=self.recordBase or self.notes;local added=0;local finish=math.max(origin+1,self:transportTick())
+            local low,high
+            for _,n in ipairs(take)do local copy=S.copy(n);copy.t=copy.t+origin;self.notes[#self.notes+1]=copy;added=added+1
+                finish=math.max(finish,copy.t+copy.d);low=math.min(low or 127,copy.n);high=math.max(high or 0,copy.n)
+            end
+            local p=self.song.parts[self.activePart];local chosen
+            if added>0 then
+                local ending=math.ceil(finish/384)*384
+                -- Overdubs in a generated repetition must become real notes. Keep
+                -- the existing materialized repetitions and unroll touched loops.
+                for i,c in ipairs(p.clips)do if origin<c.start+c.length and ending>c.start then
+                    c.loopLength=nil;c.loopStart=nil
+                    if origin>=c.start and origin<c.start+c.length then chosen=c end
+                end end
+                if chosen then chosen.length=math.max(chosen.length,ending-chosen.start)
+                elseif #p.clips<128 then chosen={name="Take "..(#p.clips+1),start=origin,length=ending-origin};p.clips[#p.clips+1]=chosen
+                else
+                    -- Keep a full track saveable: extend its nearest clip instead
+                    -- of introducing an invalid 129th clip after capture.
+                    chosen=p.clips[1];for _,c in ipairs(p.clips)do if c.start<=origin then chosen=c end end
+                    local oldEnd=chosen.start+chosen.length;chosen.start=math.min(chosen.start,origin)
+                    chosen.length=math.max(oldEnd,ending)-chosen.start;chosen.loopLength=nil;chosen.loopStart=nil
+                end
+                DeadAirComposition.cover(p,self.notes)
+                for i,c in ipairs(p.clips)do if origin>=c.start and origin<c.start+c.length then self.activeClip=i;break end end
+            end
+            local ending=added>0 and finish or 0
+            for _,n in ipairs(self.notes)do ending=math.max(ending,n.t+n.d)end
+            self.score.bars=math.max(self.recordOldBars or 1,math.ceil(ending/384));self.song.bars=self.score.bars;self:extendTo(ending)
+            p.notes=S.encode(self.notes);self.arrCache=nil;self.recordBase=nil;self.recordSeen=nil;self.recordOrigin=nil
+            self.recordStoppedPitch=low and {low,high}or nil
             self.message="Recorded "..added.." notes. Save to paper to keep the song."..(DeadAirMidi.recordFull()and " Note capacity reached; captured notes were kept."or "")
         end
         DeadAirMidi.scoreStop();DeadAirMidi.perform(false)
     end
     self.transport=nil;self:rebuildPitches()
+    if self.recordStoppedPitch then
+        local range=self.recordStoppedPitch;self.recordStoppedPitch=nil;self:focusClip(self.activeClip)
+        self:centerPitchRange(range[1],range[2]);self:refreshClipTiming(true)
+    end
 end
 function E:update()
     self:updateLibrary()
@@ -99,7 +136,13 @@ function E:update()
             self:extendTo(tick+384)
             if getTimestampMs()-(self.recordDrawAt or 0)>100 then
                 self.recordDrawAt=getTimestampMs()
-                for _,n in ipairs(DeadAirMidi.recordNotes(self.recordSeen or 0))do n.t=n.t+self.playFrom;self.notes[#self.notes+1]=n;self.recordSeen=self.recordSeen+1 end
+                for _,n in ipairs(DeadAirMidi.recordNotes(self.recordSeen or 0))do local copy=S.copy(n);copy.t=copy.t+(self.recordOrigin or self.playFrom or 0);self.notes[#self.notes+1]=copy;self.recordSeen=self.recordSeen+1
+                    self:recordPitch(copy.n)
+                end
+                local state=DeadAirMidi.motionState and DeadAirMidi.motionState()
+                if state and state.attack~=self.recordAttack and DeadAirMidi.clock()>=self.started then
+                    self.recordAttack=state.attack;if state.velocity and state.velocity>0 then self:recordPitch(state.note)end
+                end
                 self.arrCache=nil
             end
         end

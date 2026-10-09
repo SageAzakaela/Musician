@@ -88,6 +88,7 @@ DeadAir.Songs={remoteMotion=function(net,p,stop)motionCalls=(motionCalls or 0)+1
 lua.execute((mod/'client/DeadAirLive.lua').read_text())
 lua.execute('''
 local D,L=DeadAir,DeadAir.Live
+local function empty(t)for _ in pairs(t)do return false end;return true end
 function deliver(seq,events,state,at,epoch)local f=frame(seq,events,state,at,epoch);f.owner=1;f.x=1;f.y=1;f.z=0;L.command('DeadAirLive','frame',f);return f end
 connected=false;performing=false
 local f=deliver(1,'0,144,60,90;','144,60,90;')
@@ -97,18 +98,18 @@ local own=clone(f);own.owner=3;L.command('DeadAirLive','frame',own);assert(#rece
 L.command('DeadAirLive','stop',{owner=1,epoch=1,seq=1});assert(not L.remote[1] and stopped[#stopped]==1)
 L.command('DeadAirLive','frame',f);assert(not L.remote[1],'late pre-stop packet cannot revive notes')
 deliver(2,'50,144,60,90;','144,60,90;');assert(L.remote[1],'a later packet can resume after returning into range')
-D.options:getOption('hearLive'):setValue(false);L.tick();assert(not next(L.remote) and allStopped)
-deliver(3);assert(not next(L.remote),'listening opt-out must ignore incoming music')
+D.options:getOption('hearLive'):setValue(false);L.tick();assert(empty(L.remote) and allStopped)
+deliver(3);assert(empty(L.remote),'listening opt-out must ignore incoming music')
 D.options:getOption('hearLive'):setValue(true)
 audioReady=false;deliver(4,'150,144,62,90;','144,62,90;');assert(L.remote[1].waiting)
 L.tick();assert(opens==1);L.tick();assert(received[#received].packet.reset and received[#received].packet.events=='','cold listener recovers current notes after asynchronous audio startup')
-time=time+1600;L.tick();assert(not next(L.remote),'client independently expires a missing stop')
+time=time+1600;L.tick();assert(empty(L.remote),'client independently expires a missing stop')
 connected=true;performing=true;player.moving=false;player.dead=false;paused=false;D.editorActive=false
 nextFrame=frame(1);L.nextSend=0;L.tick();assert(capture and requests[#requests].module=='DeadAirLive'and requests[#requests].command=='frame')
 D.editorActive=true;L.tick();assert(not capture and requests[#requests].command=='stop','editor monitoring must be private')
 D.editorActive=false;D.scorePart=0;L.tick();assert(not capture,'score playback must not be re-broadcast as live MIDI');D.scorePart=nil
 D.options:getOption('broadcastLive'):setValue(false);L.tick();assert(not capture)
 D.options:getOption('broadcastLive'):setValue(true);time=time+100;nextFrame=frame(1);L.tick();D.stop();assert(not capture and requests[#requests].command=='stop','movement/action stop hook ends publication immediately')
-L.cleanup();assert(not next(L.remote)and not next(L.seen)and not capture)
+L.cleanup();assert(empty(L.remote)and empty(L.seen)and not capture)
 print('PASS: real live client Lua; no-controller listening, duplicate/echo/stale-stop rejection, range return, listening opt-out, asynchronous startup, timeout, editor/score privacy and immediate lifecycle cleanup')
 ''')

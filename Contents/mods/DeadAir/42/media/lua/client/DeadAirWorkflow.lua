@@ -25,14 +25,22 @@ function W:snapLabel(step)
     return self:clipBars(step).." bar"
 end
 function W:clipSelectionSet()
-    local selected={};for i in pairs(self.clipSelection or {})do if self.song.parts[self.activePart].clips[i]then selected[i]=true end end
-    if not next(selected)and self:currentClip()then selected[self.activeClip]=true end
+    -- PZ's Kahlua provides pairs(), but no global next(). This is also used by
+    -- recording's undo checkpoint, so a missing function here prevents capture.
+    local selected,any={},false;local part=self.song.parts[self.activePart]
+    for i,on in pairs(self.clipSelection or {})do if on and part and part.clips[i]then selected[i]=true;any=true end end
+    if not any and self:currentClip()then selected[self.activeClip or 1]=true end
     return selected
 end
 function W:focusClip(index)
     Q.focusClip(self,index);self.clipSelection={[index]=true};self.timeSelection=nil;self.clipCursor=self:currentClip()and self:currentClip().start or 0
 end
-function W:loadPart(index)Q.loadPart(self,index);self.clipSelection={[self.activeClip]=true};self.timeSelection=nil end
+function W:loadPart(index)
+    Q.loadPart(self,index);self.clipSelection={[self.activeClip]=true};self.timeSelection=nil
+    if not self.partViews[self.score.part]then
+        if #self.notes==0 then self:centerPitchRange(60,60)else self:fitNotes(false)end
+    end
+end
 function W:partSnapshot(notes)local state=Q.partSnapshot(self,notes);state.clipSelection=S.copy(self:clipSelectionSet());return state end
 function W:restoreEdit(state)
     local ok=Q.restoreEdit(self,state);if ok then self.clipSelection=S.copy(state.clipSelection or {[self.activeClip]=true});self.timeSelection=nil end;return ok
@@ -109,7 +117,8 @@ function W:applyClipTiming()
 end
 function W:clampView()
     if not self.pitches then return end
-    local c=self:currentClip();local lo=c and not self.editWholeTrack and c.start or 0;local hi=c and not self.editWholeTrack and c.start+c.length or self:ticks()
+    local c=self:currentClip();local inClip=c and not self.editWholeTrack and self.transport~="record"
+    local lo=inClip and c.start or 0;local hi=inClip and c.start+c.length or self:ticks()
     self.viewTicks=clamp(self.viewTicks,math.min(48,hi-lo),hi-lo);self.firstTick=clamp(self.firstTick,lo,math.max(lo,hi-self.viewTicks))
     self.pitchScroll=clamp(self.pitchScroll,0,math.max(0,#self.pitches-self.rows));self.topNote=self.pitches[math.floor(self.pitchScroll)+1]or 127
 end

@@ -77,6 +77,7 @@ function X:buildControls()
     self.detailsButton.callback=self.detailsButton.onclick
     self.clipTimingFields={}
     self.workflowReady=true;self.inspectorOpen=true;self:readLayout();self:refreshClipTiming(true);self:layout()
+    if #self.notes==0 then self:centerPitchRange(60,60)else self:fitNotes(false)end
     for _,c in pairs(self.children)do if c.backgroundColor then c.backgroundColor={r=.12,g=.13,b=.11,a=1};c.borderColor={r=.35,g=.36,b=.31,a=1}end end
     self.recordButton.backgroundColor={r=.30,g=.15,b=.12,a=1}
 end

@@ -51,6 +51,7 @@ function Q:editBounds()
     return 0,self:ticks()
 end
 function Q:noteEditable(n)
+    if self.transport=="record"then return true end
     local lo,hi=self:editBounds();if n.t<lo or n.t>=hi then return false end
     for _,c in ipairs(self.song.parts[self.activePart].clips)do
         if c.loopLength and n.t>=c.start+(c.loopStart or 0)+c.loopLength and n.t<c.start+c.length then return false end
@@ -61,7 +62,7 @@ function Q:partSnapshot(notes)
     local song=S.copy(self.song);local p=song.parts[self.activePart]
     p.notes=notes or S.encode(self.notes);p.profile=self.instrument.selected-1;p.partName=S.text(self.partEntry:getText(),48)or p.partName
     song.title=S.text(self.titleEntry:getText(),64)or song.title;song.bpm=tonumber(self.bpmEntry:getText())or song.bpm;song.bars=self.score.bars
-    return {song=song,active=self.activePart,clip=self.activeClip,whole=self.editWholeTrack,first=self.firstTick,view=self.viewTicks,pitch=self.pitchScroll,context=self.editContext}
+    return {song=song,active=self.activePart,clip=self.activeClip,whole=self.editWholeTrack,first=self.firstTick,view=self.viewTicks,pitch=self.pitchScroll,rowH=self.rowH,context=self.editContext}
 end
 function Q:pushUndo(snapshot)
     self.undoStack[#self.undoStack+1]=snapshot
@@ -75,7 +76,7 @@ function Q:restoreEdit(snapshot)
     song.revision=revision;song.song=id;self.song=song
     self:stopAudition();self:stopMonitor();self:loadPart(clamp(snapshot.active,1,#song.parts))
     self.activeClip=clamp(snapshot.clip or 1,1,math.max(1,#self.song.parts[self.activePart].clips))
-    self.editWholeTrack=snapshot.whole;self.firstTick=snapshot.first;self.viewTicks=snapshot.view;self.pitchScroll=snapshot.pitch
+    self.editWholeTrack=snapshot.whole;self.firstTick=snapshot.first;self.viewTicks=snapshot.view;self.pitchScroll=snapshot.pitch;self.rowH=snapshot.rowH or self.rowH
     self.editContext=snapshot.context or "notes";self.arrCache=nil;self.otherNoteCount=nil;self.selected={};self.dirty=true
     local clip=self:currentClip();self.phraseEntry:setText(clip and clip.name or "Clip")
     self:rebuildPitches();self:clampView();self:layout();self:refreshClipTiming(true);return true
