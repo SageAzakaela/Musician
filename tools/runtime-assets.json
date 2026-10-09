@@ -1,0 +1,190 @@
+{
+  "version": "0.13.2",
+  "workshopId": "3816180767",
+  "files": [
+    {
+      "path": "common/media/anims_X/Bob_PlayFluteExperiencedA.fbx",
+      "sha256": "26a6859ea5e178bd9d742b77e0ab2d56698c98c8927212ab2524ecb88b377d13"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayGuitarAcoustic.fbx",
+      "sha256": "676beeda105db9e99a1935e8ce5d4d61f7bf9915f81b0e4b24b866a0dfb5b38b"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayGuitarBassExperiencedA.fbx",
+      "sha256": "b7969a53ecad0a6882f245706e559a2a37b474b234fe9018cfee665752b73adf"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayGuitarExperiencedA.fbx",
+      "sha256": "fff39722ceaa1607cc3323632d6f64c6f1aed50a93b4e69dba88dc432349c231"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayKeytarExperiencedA.fbx",
+      "sha256": "89fabce0ee45a6036a248160e25d8888eb057c54963b1ca5456625b88f820d5c"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlaySaxophoneExperiencedA.fbx",
+      "sha256": "f6f2f2826832394c645abdbc8e66435fc5d07ab085128c36a5d52cecb18db3d0"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayStandingPianoEL.x",
+      "sha256": "5dfbe8961dfd9a1c1a547cf16864746168e588dd7d9f237a6cef1678cfccf625"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayStandingPianoER.x",
+      "sha256": "2b77c26cab0eb8b1957b8c817548790db2bb9e47e4f87042376273c3ef14254d"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayStandingPianoSL.x",
+      "sha256": "0856bf04c538085c547ded1ef1ab766095a42a9fe14a25c38883bb779c33ab3d"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayStandingPianoSR.x",
+      "sha256": "a2fafe79dcc4640bfd80f6ae76ec40e8878de1fc731e52933c3ea00368ead43e"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayTrumpetExperiencedA.fbx",
+      "sha256": "1240f22b5f5efb011aba0b5823c0f38a65d61556ae630e64d802e6a1ce557ca8"
+    },
+    {
+      "path": "common/media/anims_X/Bob_PlayViolinDefault.fbx",
+      "sha256": "049ebf495bcbcc77661b0d161345a1df8dbacc8fbcfea609f814fe41783ad73f"
+    },
+    {
+      "path": "common/media/anims_X/DeadAirDrumL.fbx",
+      "sha256": "c48e9ec5b30a67090dd946705ea27794799120d290a0541ac625c1877f05484b"
+    },
+    {
+      "path": "common/media/anims_X/DeadAirDrumR.fbx",
+      "sha256": "3bfb66f9374fdbe256c610ddee3e81c15bc211194d757fafb34690294b5ba8d7"
+    },
+    {
+      "path": "common/media/anims_X/DeadAirDrumReady.fbx",
+      "sha256": "d2cb83aa67a2bd36a55749105b4ccdee9a64acda4282907a73744274b3426e56"
+    },
+    {
+      "path": "common/media/anims_X/DeadAirForkTap.fbx",
+      "sha256": "a916094efd7ecbc8249be2f15e3ae7fb849f0f5a00bd4e787e53e8f79ab89cae"
+    },
+    {
+      "path": "common/media/anims_X/DeadAirPedalL.fbx",
+      "sha256": "f8eff3f377af6413874445a6ebe8ef0beb81e13a8304adfcb9ed1f76e54660ce"
+    },
+    {
+      "path": "common/media/anims_X/DeadAirPedalR.fbx",
+      "sha256": "9be74806ef03ad7e86a32a43c2eab73531ea008a6b462014e180506375730666"
+    },
+    {
+      "path": "common/media/models_X/DeadAir/ViolinBow.fbx",
+      "sha256": "13313ac16075337cf7b91bb1703b4e909e8d084e4726dbe04bf7bf5a801b74fc"
+    },
+    {
+      "path": "common/media/textures/DeadAir/ViolinBow.png",
+      "sha256": "7bd0ea483634ef059a41791925f3c5ad2c33ee21daa3aaaac12fa8ed3dba9e6b"
+    },
+    {
+      "path": "common/media/soundfonts/GeneralUser-GS.sf2",
+      "sha256": "9575028c7a1f589f5770fccc8cff2734566af40cd26ed836944e9a5152688cfe"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirBanjo.xml",
+      "sha256": "bf6470d395c261ae9a7341d423493140c042720d032d42a7c7a74a9883354339"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirBass.xml",
+      "sha256": "3e2b18fdf2fb972b80ba314d841a15a38386738f9fd2737a609e53723157f472"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirDrum.xml",
+      "sha256": "0399a088acacbd87f2fed16aa442fef4da7c767818cdc18ad9282eba9d7bf622"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirFlute.xml",
+      "sha256": "5d6613f8d818b52890a8f5cf2f45c0e2353f5a1dad2d30b8ccf0c7bcac25b0b6"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirGuitar.xml",
+      "sha256": "1fdcdd524c563c085bc8cec66b68531662594aa6278e1d6b1313b8b01244906b"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirHarmonica.xml",
+      "sha256": "da8140a6b2e66cfb073d02353a43119ff74b4b9a94fed176e9f891255339d2cf"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirKeytar.xml",
+      "sha256": "5fc31954c3ac467bd457330e2378c453ffe319958228a41591ef60cb9cd78f5a"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirKick.xml",
+      "sha256": "7bafeb15f76bf54277e5d56eb1134a7d66696442aeacb554d3ca1a3d54625096"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPercussion_footL.xml",
+      "sha256": "e1e23f8d524eb4891f18f94a61ab1e5e9aa59044cf7f9824c3605b920b2100da"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPercussion_footR.xml",
+      "sha256": "2f54a942afc1378aea9a2af0a5dcc6300d1afa65d89e5809bf4cd432e36a5df7"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPercussion_left.xml",
+      "sha256": "0a51a6cbf26db2835c1fbd6c75ea783ce3c1acfcaab3bbeb62335defb9ab5604"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPercussion_rest.xml",
+      "sha256": "013a124dbc08eb235d1f04eec1b40ec0cde1bf75f4b040166733d56a0965303f"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPercussion_right.xml",
+      "sha256": "6826ddb559569241b0b667657e38b4541025ab6511415ddae9dce36239494db4"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPianoEL.xml",
+      "sha256": "4c0e38b561a39d78dca2782176628464d0e3ddcd57cb24672acde743e3ad7d40"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPianoER.xml",
+      "sha256": "d1e59c3f55be94f4b54b8ebf444931c12165acb9f2ee4e13134db9598522044b"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPianoSL.xml",
+      "sha256": "ff9668d3103055ffa7bffa3134d5f8b18aa65c4e1b9ae86d9fdc4a856bbad310"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirPianoSR.xml",
+      "sha256": "f654038f0933f5fd2ad6d6d222b54c4d21b7d1f33baa68406ae426cbeffd2227"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirSaxophone.xml",
+      "sha256": "c9369c6768d635552f73c2a3d0ce3e61e2f43a34360ad021cb156aa5461ebe3e"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirTrumpet.xml",
+      "sha256": "859c0e9a5ce9d85f8d9df5bf6692aa31e84d569db94dd3659dd6cfad0e73a986"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirTuningFork.xml",
+      "sha256": "982c01c49e5faf0f493cde6805ab246bd01120065072bc9383e8c58cdf9d7711"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirViolin.xml",
+      "sha256": "0c72fe7b21bbe23097c35c666e1c124ce8b8786d1a707b62ec79ef572a9bcec0"
+    },
+    {
+      "path": "42/media/AnimSets/player/actions/DeadAirWhistle.xml",
+      "sha256": "e8595b33cd837d69c1e85af19437af14c97eb8ff6c0908a8acd212a17e33561c"
+    },
+    {
+      "path": "42/poster.png",
+      "sha256": "b8e5118a2fff073b5d635d756ef86c577fe2df639a413fd1eeb0172d13d7f72b"
+    },
+    {
+      "path": "common/licenses/GeneralUser-GS-LICENSE.txt",
+      "sha256": "7b32efefdf95ce38a043799f0659853ddc00fbaa14d8c50f0aca16b9b8b405be"
+    },
+    {
+      "path": "common/licenses/GeneralUser-GS-README.md",
+      "sha256": "fb23217ca2a9cf199e04aed1b04a7e81e024330411941c3638302e081584c151"
+    }
+  ]
+}

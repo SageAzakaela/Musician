@@ -1,0 +1,27 @@
+module DeadAir
+{
+    /* Performance-only visual models keep B42 carry attachments out of B41-authored poses.
+       Inventory items, weapon handling, drops, condition and attachments remain unchanged. */
+    model AcousticPerformance
+    {
+        mesh = weapons/2handed/Guitar_Acoustic,
+        texture = weapons/2handed/Guitar_Acoustic,
+    }
+    model ViolinPerformance
+    {
+        mesh = weapons/1handed/Violin,
+        texture = weapons/1handed/Violin,
+    }
+    model DrumstickPerformance
+    {
+        mesh = weapons/1handed/Drumstick,
+        texture = weapons/1handed/Drumstick,
+        scale = 0.5,
+    }
+    model ViolinBow
+    {
+        mesh = DeadAir/ViolinBow,
+        texture = DeadAir/ViolinBow,
+        scale = 0.4,
+    }
+}

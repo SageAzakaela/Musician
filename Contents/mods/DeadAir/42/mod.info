@@ -1,0 +1,12 @@
+name=Musician
+id=DeadAir
+author=Azakaela Redfire
+description=Play Zomboid's instruments with a MIDI controller, or write music on paper with a built-in piano roll and eight-track arrangement editor. Record takes, draw notes, loop clips, import MIDI, and use the included chords, progressions and drum patterns. Preview songs privately, share live performances nearby, or hand out written parts and start an ensemble together. No controller is needed for songwriting. Build 42.21, Windows x64 audio clients, ZombieBuddy 2.3+. Multiplayer is experimental.
+modversion=0.13.2
+versionMin=42.21
+versionMax=42.21
+require=\ZombieBuddy
+javaJarFile=media/java/client/DeadAir.jar
+javaPkgName=azakaela.deadair
+ZBVersionMin=2.3.0
+poster=poster.png

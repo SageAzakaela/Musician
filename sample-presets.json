@@ -1,0 +1,101 @@
+{
+  "bank": "GeneralUser GS 2.0.3",
+  "profiles": [
+    {
+      "profile": 0,
+      "bank": 0,
+      "program": 0,
+      "preset": "Grand Piano"
+    },
+    {
+      "profile": 1,
+      "bank": 0,
+      "program": 25,
+      "preset": "Steel Guitar"
+    },
+    {
+      "profile": 2,
+      "bank": 0,
+      "program": 27,
+      "preset": "Clean Guitar"
+    },
+    {
+      "profile": 3,
+      "bank": 0,
+      "program": 33,
+      "preset": "Finger Bass"
+    },
+    {
+      "profile": 4,
+      "bank": 0,
+      "program": 105,
+      "preset": "Banjo"
+    },
+    {
+      "profile": 5,
+      "bank": 0,
+      "program": 73,
+      "preset": "Flute"
+    },
+    {
+      "profile": 6,
+      "bank": 0,
+      "program": 56,
+      "preset": "Trumpet"
+    },
+    {
+      "profile": 7,
+      "bank": 0,
+      "program": 65,
+      "preset": "Alto Sax"
+    },
+    {
+      "profile": 8,
+      "bank": 0,
+      "program": 40,
+      "preset": "Violin"
+    },
+    {
+      "profile": 9,
+      "bank": 128,
+      "program": 0,
+      "preset": "Standard 1"
+    },
+    {
+      "profile": 10,
+      "bank": 0,
+      "program": 22,
+      "preset": "Harmonica"
+    },
+    {
+      "profile": 11,
+      "bank": 0,
+      "program": 78,
+      "preset": "Whistle"
+    },
+    {
+      "profile": 12,
+      "bank": 8,
+      "program": 80,
+      "preset": "Sine Wave"
+    },
+    {
+      "profile": 13,
+      "bank": 128,
+      "program": 0,
+      "preset": "Standard 1"
+    },
+    {
+      "profile": 14,
+      "bank": 128,
+      "program": 0,
+      "preset": "Standard 1"
+    },
+    {
+      "profile": 15,
+      "bank": 128,
+      "program": 0,
+      "preset": "Standard 1"
+    }
+  ]
+}

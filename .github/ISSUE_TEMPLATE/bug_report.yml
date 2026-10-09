@@ -1,0 +1,44 @@
+name: Bug report
+description: Something broke while playing or writing music.
+title: "[Bug] "
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the instrument and whether you were playing live, recording, editing or previewing.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Musician, Zomboid and ZombieBuddy versions
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Game mode
+      options:
+        - Single-player
+        - Hosted multiplayer
+        - Dedicated server
+    validations:
+      required: true
+  - type: textarea
+    id: midi
+    attributes:
+      label: MIDI/audio details, if relevant
+      description: Controller, connection type, audio device, Audio response and Touch response settings. Does F10 count the missing notes? Include the displayed velocity if useful.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log excerpt or screenshot
+      description: Remove personal paths, usernames and unrelated information. Please do not upload entire saves or private MIDI packs.

@@ -1,0 +1,8 @@
+name=Your Soundfont Pack
+id=YourSoundfontPack
+author=Your name
+description=Optional SF2 presets for Musician. Choose them from its Sounds window.
+require=\DeadAir
+versionMin=42.21
+versionMax=42.21
+modversion=1.0.0

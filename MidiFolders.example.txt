@@ -1,0 +1,5 @@
+# Copy entries into Zomboid/Lua/DeadAirMidiFolders.txt, or use Library > Folders > Add folder.
+# Four TAB-separated columns: display label, notes or drums, gm or livesd or unison, absolute folder.
+# Example only (remove # and change paths):
+# My chords	notes	gm	D:\Music\MIDI Chords
+# My GM drums	drums	gm	D:\Music\GM Drums
