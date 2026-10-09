@@ -30,7 +30,7 @@ and now there's a music workstation in it.
   stay unchanged. Fast audio limits queued audio; actual latency still depends on
   Windows, the device driver and the rest of the audio path.
 
-Current source snapshot: **0.14.1**, targeting **Project Zomboid Build 42.21**.
+Current source snapshot: **0.14.2**, targeting **Project Zomboid Build 42.21**.
 The supported audio-client setup is Windows x64. Other operating systems have not
 been verified. The internal mod ID and Java package remain `DeadAir` for save and
 settings compatibility.
@@ -48,6 +48,10 @@ paper to write a song.
 
 **F10** shows the performance panel, **F11** stops notes, and **F12** toggles playing
 animations. In-world music can attract zombies; the setting is optional.
+
+Drag the **Drag to resize tracks** bar between the arrangement and piano roll to
+give either view more room. The size is remembered locally; Escape cancels a drag.
+Scroll over the tracks when there are more than fit in the arrangement.
 
 To fix an existing short loop, select its clip, open **Inspector**, set **Loop bars**
 to the intended cycle (for example `8`), and click **Apply timing**. **Clip bars**

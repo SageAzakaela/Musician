@@ -239,7 +239,9 @@ function V:prerender()
     end
     local subtitle="MUSICIAN / SONGBOOK   /   "..self.titleEntry:getText().."  -  "..self.partEntry:getText()..(self.dirty and " *" or "")
     self:drawText(short(subtitle,self.maxButton.x-28),14,10,.82,.84,.70,1,UIFont.Small)
-    if self.details then for _,f in ipairs(self.detailFields)do self:drawText(f.label,f.x,f.y,.65,.72,.75,1,UIFont.Small)end end
+    -- The workspace owns sidebar labels. Its button rows have no legacy x/y;
+    -- drawing them here would pass nil coordinates into the Java UI bridge.
+    if self.details and not self.workflowReady then for _,f in ipairs(self.detailFields)do self:drawText(f.label,f.x,f.y,.65,.72,.75,1,UIFont.Small)end end
     if self.clipTiming then for _,f in ipairs(self.clipTimingFields)do self:drawText(f.label,f.x,f.y,.73,.76,.61,1,UIFont.Small)end end
     local x,y,w,h=self.gridX,self.gridY,self.gridW,self.gridH
     self:drawRect(x,self.rulerY,w,y-self.rulerY,1,.11,.15,.17)

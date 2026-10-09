@@ -162,7 +162,9 @@ function A:drawArrangement()
     local x,w,y=self.trackW,self.arrW,self.arrY
     self:drawRect(12,y,(self.bodyW or self.width)-24,self.arrH,1,.105,.11,.095)
     self:drawRect(x,y,w,self.arrRulerH,1,.16,.17,.145)
-    self:drawText("PART / INSTRUMENT",20,y+4,.68,.69,.62,1,UIFont.Small)
+    local range=#self.song.parts>self.trackRows and (tostring((self.trackScroll or 0)+1).."-"..math.min(#self.song.parts,(self.trackScroll or 0)+self.trackRows).." / "..#self.song.parts)or ""
+    local rangeW=getTextManager():MeasureStringX(UIFont.Small,range)
+    self:drawText(short("PART / INSTRUMENT",x-rangeW-40),20,y+4,.68,.69,.62,1,UIFont.Small)
     local step=384;while step/self.arrTicks*w<52 do step=step*2 end
     self:setStencilRect(x,y,w,self.arrH)
     for tick=math.ceil(self.arrFirst/step)*step,self.arrFirst+self.arrTicks,step do
@@ -221,7 +223,7 @@ function A:drawArrangement()
     self:drawLoopGuides()
     local tick=self.transport and self.transport~="library"and self:transportTick()or (self.playFrom or 0)
     if tick>=self.arrFirst and tick<=self.arrFirst+self.arrTicks then self:drawRect(x+(tick-self.arrFirst)/self.arrTicks*w,y,2,self.arrH,1,.84,.65,.39)end
-    if #self.song.parts>self.trackRows then
-        self:drawText(tostring((self.trackScroll or 0)+1).."-"..math.min(#self.song.parts,(self.trackScroll or 0)+self.trackRows).." / "..#self.song.parts,x-60,y+4,.72,.73,.64,1,UIFont.Small)
+    if range~=""then
+        self:drawText(range,x-rangeW-8,y+4,.72,.73,.64,1,UIFont.Small)
     end
 end

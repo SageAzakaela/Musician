@@ -6,7 +6,12 @@ local function native()
  local state={visible=true,x=0,y=0,width=0,height=0,text='',focused=false}
  return setmetatable({}, {__index=function(_,name)
   return function(self,value,...)
-   if name=='setVisible'then assert(type(value)=='boolean');state.visible=value
+   if name=='DrawText' or name=='DrawTextCentre' or name=='DrawTextRight'then
+    -- PZ's Java bridge requires x/y and RGBA numbers; a permissive drawing
+    -- double previously hid missing inspector-label coordinates.
+    local args={...}
+    for i=2,7 do assert(type(args[i])=='number',name..' requires numeric argument '..i)end
+   elseif name=='setVisible'then assert(type(value)=='boolean');state.visible=value
    elseif name=='setX'then state.x=value elseif name=='setY'then state.y=value
    elseif name=='setWidth'then state.width=value elseif name=='setHeight'then state.height=value
    elseif name=='getX'then return state.x elseif name=='getY'then return state.y
@@ -27,6 +32,7 @@ textManager.getFontFromEnum=function()return {getLineHeight=function()return fon
 function getTextManager()return textManager end
 ISUITextureGetter={checkGetTexture=function(t)return t end}
 function getPlayerScreenWidth()return screenWidth end;function getPlayerScreenHeight()return screenHeight end
+function getMouseX()return 0 end;function getMouseY()return 0 end
 ''')
 for name in ['Layout/ISDock','Layout/ISBounds','ISUIElement','ISPanel','ISPanelJoypad','ISScrollBar','ISScrollingListBox','ISButton','ISComboBox','ISTextEntryBox']:
     lua.execute((a.game/'media/lua/client/ISUI'/f'{name}.lua').read_text(encoding='utf-8-sig'))

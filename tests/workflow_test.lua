@@ -108,18 +108,46 @@ ctrlDown=true;e:onKeyPress(Keyboard.KEY_L);ctrlDown=false
 assert(e:currentClip().loopLength==768 and #e.notes==2)
 e:undo();e:loopPreset(2);assert(e:currentClip().loopLength==768);e:close()
 -- Resizable split, persistent per-user layout, bounded/corrupt preference handling.
-e=fresh();e:addPart();e:addPart();e:layout();local dy=e.dividerY
-e:onMouseDown(40,dy+2);assert(e.drag.kind=='divider');e.mx=40;e.my=dy+e.trackH+2;e:onMouseMove(0,1);e:onMouseUp(40,e.my)
-assert(e.arrangementHeight>=3*e.trackH);local height=e.arrangementHeight
+screenWidth,screenHeight,fontHeight=1920,1080,14
+e=fresh();e:layout();local dy=e.dividerY;local initial=e.arrContentH
+local originalPitch=e.pitchScroll;local center=e.pitchScroll+e.rows/2
+local beforeNotes=DeadAirScore.encode(e.notes);local beforeUndo=#e.undoStack
+-- Even ONE track grows by individual pixels; use the bottom of the visible handle.
+local grab=dy+e.dividerH-1
+e:onMouseDown(40,grab);assert(e.drag.kind=='divider' and e.capture)
+e.mx=40;e.my=grab+7;e:onMouseMove(0,1)
+assert(e.dividerY==dy+7 and e.arrContentH==initial+7 and e.trackRows==1)
+e.my=grab+143;e:onMouseMoveOutside(0,1)
+assert(e.dividerY==dy+143 and math.abs(e.pitchScroll+e.rows/2-center)<.01)
+e:onKeyPress(Keyboard.KEY_ESCAPE)
+assert(not e.drag and not e.capture and e.arrangementHeight==nil and e.dividerY==dy and e.pitchScroll==originalPitch)
+e:onMouseDown(40,grab);e.mx=40;e.my=grab+143;e:onMouseMove(0,1);e:onMouseUpOutside(40,e.my)
+assert(e.arrContentH==initial+143 and not e.capture);local height=e.arrangementHeight
+assert(DeadAirScore.equal(beforeNotes,DeadAirScore.encode(e.notes)) and #e.undoStack==beforeUndo)
 dy=e.dividerY;e:onMouseDown(40,dy+2);e.mx=40;e.my=dy-60;e:onMouseMove(0,-1);e:onKeyPress(Keyboard.KEY_ESCAPE);assert(e.arrangementHeight==height)
 local reader,writer=getFileReader,getFileWriter;local prefs={}
 function getFileWriter(name)assert(name=='MusicianEditorLayout.ini');prefs={};return {write=function(_,s)prefs[#prefs+1]=s:gsub('\n$','')end,close=function()end}end
 function getFileReader(name)assert(name=='MusicianEditorLayout.ini');local i=0;return {readLine=function()i=i+1;return prefs[i]end,close=function()end}end
 e.arrGrid.selected=4;e.grid.selected=6;e.arrAdaptive=true;e.inspectorOpen=false;e:writeLayout()
 local restored=fresh();assert(restored.arrGrid.selected==4 and restored.grid.selected==6 and restored.arrAdaptive and not restored.inspectorOpen and restored.arrangementHeight==height)
-prefs={'version=1','arrangementHeight=99999','arrGrid=99999','noteGrid=-99'};restored:readLayout();assert(restored.arrangementHeight==600 and restored.arrGrid.selected==7 and restored.grid.selected==1)
+prefs={'version=1','arrangementHeight=99999','arrGrid=99999','noteGrid=-99'};restored:readLayout();assert(restored.arrangementHeight==8192 and restored.arrGrid.selected==7 and restored.grid.selected==1)
 prefs={'version=bad','arrGrid=2'};restored:readLayout();assert(restored.arrGrid.selected==7)
 getFileReader,getFileWriter=reader,writer;restored:close();e:close()
+-- Resizing reveals all tracks and repairs scroll offsets; shrinking only the
+-- window must not destroy the preferred size, and a later grab must not jump.
+e=fresh();for i=2,8 do e:addPart()end
+e.arrangementHeight=e.trackH;e:layout();e.trackScroll=7
+dy=e.dividerY;e:onMouseDown(40,dy+3);e.mx=40;e.my=dy+10000;e:onMouseMove(0,1);e:onMouseUp(40,e.my)
+assert(e.trackRows==8 and e.trackScroll==0 and e.availableGridH>=100 and not e.arrHidden)
+height=e.arrangementHeight;e:setHeight(800);e:layout()
+assert(e.arrContentH<height and e.arrangementHeight==height and e.availableGridH>=100)
+dy=e.dividerY;initial=e.arrContentH;e:onMouseDown(40,dy+3);e.mx=40;e.my=dy-4;e:onMouseMove(0,-1)
+assert(e.arrContentH==initial-7 and e.dividerY==dy-7,'Dragging a clamped layout jumped')
+e:onKeyPress(Keyboard.KEY_ESCAPE);assert(e.arrangementHeight==height)
+e:setHeight(1064);e:layout();assert(e.arrContentH==height)
+dy=e.dividerY;e:onMouseDown(40,dy+3);e.mx=40;e.my=-10000;e:onMouseMove(0,-1);e:onMouseUp(40,e.my)
+assert(e.arrContentH==e.trackH and e.trackRows==1)
+e:close()
 -- Accessible controls at common screens and larger font sizes, including inspector scrolling.
 for _,size in ipairs({{1024,768,18},{1280,720,22},{1920,1080,22}})do
     screenWidth,screenHeight,fontHeight=size[1],size[2],size[3]

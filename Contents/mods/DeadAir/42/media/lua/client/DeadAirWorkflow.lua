@@ -142,7 +142,10 @@ function W:arrMouseDown(x,y)
 end
 function W:arrDrag(x,y)
     local d=self.drag;if not d then return false end
-    if d.kind=="divider"then self.arrangementHeight=clamp(d.height+y-d.y,self.trackH,math.max(self.trackH,self.height*.5));self:layout();return true end
+    if d.kind=="divider"then
+        self.arrangementHeight=clamp(d.height+y-d.y,self.trackH,math.max(self.trackH,self.arrangementMaxHeight))
+        self:layout();self.pitchScroll=d.pitchCenter-self.rows/2;self:clampView();return true
+    end
     if d.kind=="clipGroup"then
         if not d.moved and math.abs(x-d.x)<5 then return true end;d.moved=true
         local step=self:arrStep();local destination=snap(d.old.start+(x-d.x)/self.arrW*d.arrTicks,step)
@@ -167,7 +170,13 @@ function W:arrDrag(x,y)
 end
 function W:arrFinish(cancel)
     local d=self.drag;if not d then return false end
-    if d.kind=="divider"then self.drag=nil;self:setCapture(false);if cancel then self.arrangementHeight=d.height;self:layout()end;return true end
+    if d.kind=="divider"then
+        self.drag=nil;self:setCapture(false)
+        if cancel then
+            self.arrangementHeight=d.preference;self.trackScroll=d.trackScroll;self:layout();self.pitchScroll=d.pitch;self:clampView()
+        else self:writeLayout()end
+        return true
+    end
     if d.kind=="clipGroup"or d.kind=="loopStart"or d.kind=="loopEnd"or d.kind=="loopSelect"then
         self.drag=nil;self:setCapture(false)
         if cancel then self:restoreEdit(d.snapshot)
@@ -178,8 +187,11 @@ function W:arrFinish(cancel)
     return A.arrFinish(self,cancel)
 end
 function W:onMouseDown(x,y)
-    if not self.help and self.dividerY and not self.arrHidden and y>=self.dividerY and y<self.dividerY+8 and x<self.bodyW then
-        local d=self:beginDrag("divider",x,y);d.height=self.arrangementHeight or self.arrH-self.arrRulerH;return true
+    if not self.help and self:overArrangementDivider(x,y)then
+        self:blurFields()
+        local d=self:beginDrag("divider",x,y)
+        d.height=self.arrContentH;d.preference=self.arrangementHeight;d.trackScroll=self.trackScroll;d.pitchCenter=self.pitchScroll+self.rows/2
+        return true
     end
     local c=self:currentClip()
     if not self.help and c and self.loopY and y>=self.loopY and y<self.loopY+self.loopH and x>=self.gridX and x<=self.gridX+self.gridW then

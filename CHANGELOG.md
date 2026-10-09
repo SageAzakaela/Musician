@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.14.2
+
+- The arrangement now resizes smoothly in pixels, even with just one or two tracks.
+  Grab the wider **Drag to resize tracks** bar between the tracks and piano roll.
+  It highlights on hover, remembers the size, and supports Escape to cancel.
+- Resizing keeps the piano roll centered on the same pitches and reserves room
+  for notes. Smaller windows temporarily clamp the arrangement without losing
+  the preferred size. Expanding it reveals more tracks and adjusts track scrolling.
+- Fixed the Details inspector repeatedly sending missing label coordinates to
+  the game's drawing API, causing the `Number.doubleValue()` error popup.
+- Kept the visible-track counter from overlapping its heading at larger fonts.
+
+Validation: reproduced the label failure with strict drawing-argument checks;
+the complete Lua/editor/widget/simulated-network suite passes in Lua 5.1 and the
+installed game's Kahlua VM. Resize checks cover individual pixels, one/eight tracks,
+limits, mouse release outside the window, cancellation, pitch focus, preferences
+and window resizing. Native UI/audio remain simulated; in-game playtest pending.
+Lua-only update; the Java engine remains 0.13.2.
+
 ## 0.14.1
 
 - Fixed the 0.14.0 clip-selection crash that also prevented recording from starting.

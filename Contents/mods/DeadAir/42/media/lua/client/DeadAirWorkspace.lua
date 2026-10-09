@@ -20,7 +20,7 @@ function X:readLayout()
         for i=1,24 do local line=file:readLine();if not line then break end;local key,value=line:match("^(%a+)=(%-?[%d%.]+)$");if key then data[key]=tonumber(value)end end;file:close()
     end)
     if data.version~=1 then return end
-    if data.arrangementHeight then self.arrangementHeight=clamp(data.arrangementHeight,42,600)end
+    if data.arrangementHeight then self.arrangementHeight=clamp(data.arrangementHeight,42,8192)end
     self.inspectorOpen=data.inspector==1;self.arrAdaptive=data.arrAdaptive==1;self.noteAdaptive=data.noteAdaptive==1
     if data.arrGrid then self.arrGrid.selected=math.floor(clamp(data.arrGrid,1,7))end
     if data.noteGrid then self.grid.selected=math.floor(clamp(data.noteGrid,1,7))end
@@ -81,7 +81,7 @@ function X:buildControls()
     for _,c in pairs(self.children)do if c.backgroundColor then c.backgroundColor={r=.12,g=.13,b=.11,a=1};c.borderColor={r=.35,g=.36,b=.31,a=1}end end
     self.recordButton.backgroundColor={r=.30,g=.15,b=.12,a=1}
 end
-function X:layout(compact)
+function X:layout(compact,arrangementLimit)
     if not self.workflowReady then return V.layout(self,compact)end
     local h,gap=self.controlH,5;local y=self.titleH;local limit=self.width
     for _,c in pairs(self.children)do c:setVisible(false)end
@@ -100,11 +100,14 @@ function X:layout(compact)
     if not self.arrHidden then y=y+self.fontH+6;flow(self.arrControls)end
     self.arrY=y;self.arrRulerH=self.fontH+10;self.trackH=math.max(42,self.fontH*2+12)
     self.trackW=math.max(200,math.min(280,self.bodyW*.24));self.arrW=self.bodyW-self.trackW-16
-    local available=math.min(self.arrangementHeight or math.min(3,#self.song.parts)*self.trackH,self.height*.4)
-    self.trackRows=self.arrHidden and 0 or math.max(1,math.min(#self.song.parts,8,math.floor(available/self.trackH)))
-    self.arrH=self.arrHidden and 0 or self.arrRulerH+self.trackRows*self.trackH
+    -- Size the viewport in pixels, independently of the number of tracks.
+    -- Only complete rows receive input; spare space remains available for tracks.
+    local wanted=self.arrangementHeight or math.min(3,#self.song.parts)*self.trackH
+    self.arrContentH=self.arrHidden and 0 or clamp(wanted,self.trackH,arrangementLimit or math.max(self.trackH,self.height))
+    self.trackRows=self.arrHidden and 0 or math.max(1,math.min(#self.song.parts,math.floor(self.arrContentH/self.trackH)))
+    self.arrH=self.arrHidden and 0 or self.arrRulerH+self.arrContentH
     self.trackScroll=clamp(self.trackScroll or 0,0,math.max(0,#self.song.parts-self.trackRows))
-    y=y+self.arrH;self.dividerY=y;y=y+(self.arrHidden and 4 or 10)
+    y=y+self.arrH;self.dividerY=y;self.dividerH=math.max(18,self.fontH+6);y=y+(self.arrHidden and 4 or self.dividerH)
     self.partLabelY=y;y=y+self.fontH+6;flow(self.partControls);flow(self.tools)
     if self.scaleEnabled then flow(self.scaleControls)end
     self.gridX=math.max(60,measure("C#-1")+20);self.gridW=self.bodyW-self.gridX-16
@@ -112,7 +115,14 @@ function X:layout(compact)
     self.overviewH=20;self.overviewY=self.height-3*self.fontH-36
     self.velocityH=math.max(64,2*self.fontH+h+10);self.velocityY=self.overviewY-self.velocityH-6
     self.availableGridH=(self.showVelocity and self.velocityY or self.overviewY)-self.gridY-6
-    if self.availableGridH<100 and not self.arrHidden then self:layout(true);return end
+    -- Reserve a usable piano roll after accounting for wrapped toolbars, scale
+    -- controls and velocity. A smaller window clamps the view, not the saved size.
+    self.arrangementMaxHeight=math.floor(self.arrContentH+self.availableGridH-100)
+    if self.availableGridH<100 and not self.arrHidden then
+        if self.arrangementMaxHeight>=self.trackH then self:layout(compact,self.arrangementMaxHeight)
+        else self:layout(true)end
+        return
+    end
     self.availableGridH=math.max(32,self.availableGridH);self.rows=math.max(1,math.floor(self.availableGridH/self.rowH));self.gridH=self.rows*self.rowH;self:clampView()
     place(self.closeButton,self.width-self.closeButton.rollWidth-10,5,self.closeButton.rollWidth,h)
     place(self.maxButton,self.closeButton.x-self.maxButton.rollWidth-5,5,self.maxButton.rollWidth,h)
@@ -131,7 +141,7 @@ function X:layout(compact)
         end
         row({self.detailsButton,self.soundfontsButton})
         if self.details then
-            for _,f in ipairs(self.detailFields)do if f.control~=self.copyButton and f.control~=self.exportButton then label(f.label,f.control);f.x=x;f.y=-1000 end end
+            for _,f in ipairs(self.detailFields)do if f.control~=self.copyButton and f.control~=self.exportButton then label(f.label,f.control)end end
             row({self.copyButton,self.exportButton});row({self.foldButton,self.auditionButton});row({self.followButton,self.length})
         else
             label("Clip name",self.phraseEntry,w-self.renameButton.rollWidth-gap);place(self.renameButton,x+w-self.renameButton.rollWidth,sy-h-gap,self.renameButton.rollWidth,h)
@@ -159,8 +169,14 @@ function X:prerender()
     self.noteSnapButton:setTitle(self.noteAdaptive and "Auto "..self:snapLabel(self:step())or "Fixed")
     self.inspectorButton:setTitle("Inspector")
     if not self.arrHidden then
-        self:drawRect(12,self.dividerY+2,self.bodyW-28,3,.8,.31,.33,.26)
-        self:drawRect(self.bodyW/2-20,self.dividerY+1,40,5,1,.62,.65,.48)
+        local active=self.drag and self.drag.kind=="divider"
+        local hover=self:overArrangementDivider(self:getMouseX(),self:getMouseY())
+        local label=active and "Resize tracks  |  Esc: cancel"or "Drag to resize tracks"
+        local width=measure(label);local x=(self.bodyW-width)/2;local cy=self.dividerY+self.dividerH/2
+        self:drawRect(12,self.dividerY,self.bodyW-28,self.dividerH,1,(active or hover)and .25 or .16,(active or hover)and .28 or .18,.12)
+        self:drawRect(20,cy-1,math.max(0,x-32),2,.8,.50,.54,.37)
+        self:drawRect(x+width+12,cy-1,math.max(0,self.bodyW-x-width-36),2,.8,.50,.54,.37)
+        self:drawText(label,x,self.dividerY+(self.dividerH-self.fontH)/2,.80,.83,.65,1,UIFont.Small)
     end
     if self.inspectorOpen and not self.libraryOpen then
         self:drawRectBorder(self.inspectorX-4,self.sideY-3,self.inspectorW+8,self.height-self.sideY-7,1,.31,.34,.26)
@@ -187,6 +203,9 @@ function X:prerender()
         end end;self:clearStencilRect()
     end
     if self.editContext=="notes"then self:drawRectBorder(self.gridX,self.gridY,self.gridW,self.gridH,1,.57,.63,.42)end
+end
+function X:overArrangementDivider(x,y)
+    return not self.arrHidden and self.dividerY~=nil and x>=12 and x<=self.bodyW-16 and y>=self.dividerY and y<self.dividerY+self.dividerH
 end
 function X:onMouseWheel(delta)
     if self.help then self.helpScroll=clamp((self.helpScroll or 0)+delta*3,0,self.helpMaxScroll or 0);return true end
